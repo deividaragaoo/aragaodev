@@ -27,7 +27,7 @@ export function Button({
   onClick,
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-full min-h-[44px] active:scale-[0.98]";
+    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 rounded-full min-h-[44px] active:scale-[0.98] [&_svg]:shrink-0";
 
   const variants = {
     primary:

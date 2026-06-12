@@ -39,11 +39,18 @@ export function ProjectCarousel({ items }: ProjectCarouselProps) {
 
   const current = items[index];
   const isContain = current.fit === "contain";
+  const aspectClass =
+    current.aspect === "3/2"
+      ? "aspect-[3/2]"
+      : current.aspect === "16/9"
+        ? "aspect-[16/9]"
+        : "aspect-[16/10] sm:aspect-[16/9]";
+  const usePadding = current.padding !== false;
 
   return (
     <div className="relative">
       <div
-        className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden"
+        className={cn("relative overflow-hidden", aspectClass)}
         style={{ backgroundColor: current.bg ?? "#0a0a0a" }}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -62,7 +69,9 @@ export function ProjectCarousel({ items }: ProjectCarouselProps) {
               unoptimized
               quality={100}
               className={cn(
-                isContain ? "object-contain p-6 sm:p-10" : "object-cover object-top"
+                isContain
+                  ? cn("object-contain", usePadding && "p-3 sm:p-4")
+                  : "object-cover object-center",
               )}
               sizes="(max-width: 768px) 100vw, 672px"
             />

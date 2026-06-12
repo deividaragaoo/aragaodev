@@ -10,9 +10,11 @@ export function JsonLd() {
     telephone: "+55-79-98157-5179",
     address: {
       "@type": "PostalAddress",
-      addressLocality: "Feira de Santana",
-      addressRegion: "BA",
       addressCountry: "BR",
+    },
+    areaServed: {
+      "@type": "Country",
+      name: "Brasil",
     },
     sameAs: [
       "https://github.com",

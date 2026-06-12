@@ -82,7 +82,7 @@ export function Footer() {
             © {new Date().getFullYear()} Aragão Dev
           </p>
           <p className="text-subtle text-xs font-light">
-            Feira de Santana, BA
+            Atendimento em todo o Brasil
           </p>
         </div>
       </div>

@@ -104,11 +104,11 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
                     variant="primary"
                     showArrow={false}
                     fullWidth
-                    className="sm:flex-1"
+                    className="sm:flex-1 flex-nowrap gap-2.5 px-5"
                     onClick={() => setShowMobilePreview(true)}
                   >
-                    Ver site no celular
-                    <Smartphone className="w-3.5 h-3.5" />
+                    <Smartphone className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+                    <span className="whitespace-nowrap">Ver site no celular</span>
                   </Button>
                   <Button
                     href="#contato"

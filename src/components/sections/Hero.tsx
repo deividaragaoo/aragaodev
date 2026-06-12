@@ -33,7 +33,7 @@ export function Hero({ onProjectSelect }: HeroProps) {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-[0.25em] text-muted mb-5 sm:mb-6"
         >
-          Software House · Feira de Santana
+          Software House · Atendimento em todo o Brasil
         </motion.p>
 
         <motion.h1

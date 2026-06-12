@@ -33,6 +33,8 @@ export type ProjectGalleryItem = {
   caption?: string;
   fit?: "cover" | "contain";
   bg?: string;
+  aspect?: "3/2" | "16/10" | "16/9";
+  padding?: boolean;
 };
 
 export type Project = {
@@ -66,25 +68,13 @@ export const projects: Project[] = [
     metrics: { Pedidos: "20K+", Entrega: "Rápida", Desde: "2021" },
     gallery: [
       {
-        src: "/projects/gl-emporio-logo.png",
-        alt: "Logo GL Empório",
-        caption: "Identidade visual",
-        fit: "contain",
-        bg: "#000000",
-      },
-      {
-        src: "/projects/gl-emporio/02-admin.svg",
+        src: "/projects/gl-emporio/02-admin.png",
         alt: "Painel administrativo GL Empório",
         caption: "Painel administrativo",
         fit: "cover",
         bg: "#0a0a0a",
-      },
-      {
-        src: "/projects/gl-emporio/03-mobile.svg",
-        alt: "Versão mobile GL Empório",
-        caption: "Experiência mobile",
-        fit: "cover",
-        bg: "#0a0a0a",
+        aspect: "3/2",
+        padding: false,
       },
     ],
   },
@@ -103,25 +93,13 @@ export const projects: Project[] = [
     metrics: { Entrega: "45 min", Nota: "4.8", Tipo: "Delivery" },
     gallery: [
       {
-        src: "/projects/partiu-pizza-logo.png",
-        alt: "Logo Partiu Pizza",
-        caption: "Identidade visual",
-        fit: "contain",
-        bg: "#E85D04",
-      },
-      {
-        src: "/projects/partiu-pizza/02-admin.svg",
+        src: "/projects/partiu-pizza/02-admin.png",
         alt: "Painel administrativo Partiu Pizza",
         caption: "Painel administrativo",
         fit: "cover",
         bg: "#0a0a0a",
-      },
-      {
-        src: "/projects/partiu-pizza/03-mobile.svg",
-        alt: "Versão mobile Partiu Pizza",
-        caption: "Experiência mobile",
-        fit: "cover",
-        bg: "#E85D04",
+        aspect: "3/2",
+        padding: false,
       },
     ],
   },
@@ -140,25 +118,13 @@ export const projects: Project[] = [
     metrics: { Entrega: "60 min", Nota: "4.8", Desde: "2015" },
     gallery: [
       {
-        src: "/projects/pizzaria-carioca-logo.png",
-        alt: "Logo Pizzaria Carioca",
-        caption: "Identidade visual",
-        fit: "contain",
-        bg: "#FFFFFF",
-      },
-      {
-        src: "/projects/pizzaria-carioca/02-admin.svg",
+        src: "/projects/pizzaria-carioca/02-admin.png",
         alt: "Painel administrativo Pizzaria Carioca",
         caption: "Painel administrativo",
         fit: "cover",
-        bg: "#fafafa",
-      },
-      {
-        src: "/projects/pizzaria-carioca/03-mobile.svg",
-        alt: "Versão mobile Pizzaria Carioca",
-        caption: "Experiência mobile",
-        fit: "cover",
-        bg: "#fafafa",
+        bg: "#0a0a0a",
+        aspect: "3/2",
+        padding: false,
       },
     ],
   },

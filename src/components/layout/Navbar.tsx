@@ -28,7 +28,7 @@ export function Navbar() {
       >
         <div className="relative max-w-6xl mx-auto h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between">
           <Link href="/" className="relative z-10 shrink-0">
-            <BrandLogo size="sm" variant="nav" />
+            <BrandLogo size="sm" />
           </Link>
 
           <nav
@@ -82,7 +82,7 @@ export function Navbar() {
               className="fixed top-[max(1rem,env(safe-area-inset-top,1rem))] left-4 right-4 z-[120] rounded-2xl border border-white/[0.08] bg-[#050505] p-5 sm:p-6 md:hidden shadow-[0_24px_64px_rgba(0,0,0,0.6)]"
             >
               <div className="flex justify-between items-center mb-6">
-                <BrandLogo size="sm" variant="nav" />
+                <BrandLogo size="sm" />
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="flex h-11 w-11 items-center justify-center text-muted hover:text-foreground"
