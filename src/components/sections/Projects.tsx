@@ -17,7 +17,7 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
         <SectionHeader
           index="01"
           label="Trabalhos"
-          title="Projetos selecionados"
+          title="Alguns dos meus projetos selecionados"
           description="Experiências digitais reais entregues para marcas que exigem excelência."
         />
 

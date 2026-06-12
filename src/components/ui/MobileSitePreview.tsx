@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Loader2, Smartphone } from "lucide-react";
 
 /** iPhone 14 Pro Max viewport (CSS logical pixels) */
 const DEVICE_WIDTH = 430;
 const DEVICE_HEIGHT = 932;
+const LOAD_TIMEOUT_MS = 8000;
 
 interface MobileSitePreviewProps {
   url: string;
@@ -15,9 +16,92 @@ interface MobileSitePreviewProps {
   onClose: () => void;
 }
 
-export function MobileSitePreview({ url, title, open, onClose }: MobileSitePreviewProps) {
+interface PreviewFrameProps {
+  url: string;
+  title: string;
+  className?: string;
+}
+
+function PreviewFrame({ url, title, className }: PreviewFrameProps) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    setFailed(false);
+
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    let loaded = false;
+
+    const finishLoading = () => {
+      if (loaded) return;
+      loaded = true;
+      setLoading(false);
+    };
+
+    iframe.addEventListener("load", finishLoading);
+
+    const timeout = window.setTimeout(() => {
+      if (!loaded) {
+        setLoading(false);
+        setFailed(true);
+      }
+    }, LOAD_TIMEOUT_MS);
+
+    return () => {
+      iframe.removeEventListener("load", finishLoading);
+      window.clearTimeout(timeout);
+    };
+  }, [url]);
+
+  return (
+    <div className={className}>
+      {loading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background">
+          <Loader2 className="w-6 h-6 animate-spin text-muted" />
+          <p className="text-xs text-muted font-light">Carregando site...</p>
+        </div>
+      )}
+
+      {!loading && failed && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background px-6 text-center">
+          <p className="text-sm text-muted font-light">
+            Não foi possível exibir o preview aqui.
+          </p>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-foreground hover:text-foreground/80 transition-colors"
+          >
+            Abrir site em nova aba
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      )}
+
+      <iframe
+        ref={iframeRef}
+        src={url}
+        title={`Preview mobile — ${title}`}
+        className="absolute inset-0 w-full h-full border-0 bg-white"
+        referrerPolicy="no-referrer-when-downgrade"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      />
+    </div>
+  );
+}
+
+export function MobileSitePreview({ url, title, open, onClose }: MobileSitePreviewProps) {
+  const [session, setSession] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (open) setSession((current) => current + 1);
+  }, [open, url]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 639px)");
@@ -28,8 +112,15 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
   }, []);
 
   useEffect(() => {
-    if (open) setLoading(true);
-  }, [open, url]);
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -78,23 +169,12 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                 </button>
               </div>
 
-              <div className="relative flex-1 min-h-0 bg-white">
-                {loading && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted" />
-                    <p className="text-xs text-muted font-light">Carregando site...</p>
-                  </div>
-                )}
-                <iframe
-                  key={url}
-                  src={url}
-                  title={`Preview mobile — ${title}`}
-                  className="absolute inset-0 w-full h-full border-0 bg-white"
-                  onLoad={() => setLoading(false)}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
+              <PreviewFrame
+                key={`${url}-${session}`}
+                url={url}
+                title={title}
+                className="relative flex-1 min-h-0 bg-white"
+              />
 
               <div
                 className="flex items-center justify-between gap-3 px-4 py-3 border-t border-white/[0.06] shrink-0"
@@ -161,21 +241,11 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                     <div className="absolute -right-[5px] top-[30%] w-[3px] h-20 rounded-r-sm bg-[#3a3a3c]" />
 
                     <div className="relative w-full h-full rounded-[2.65rem] overflow-hidden bg-black">
-                      {loading && (
-                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background">
-                          <Loader2 className="w-6 h-6 animate-spin text-muted" />
-                          <p className="text-xs text-muted font-light">Carregando site...</p>
-                        </div>
-                      )}
-
-                      <iframe
-                        key={url}
-                        src={url}
-                        title={`Preview mobile — ${title}`}
-                        className="w-full h-full border-0 bg-white"
-                        onLoad={() => setLoading(false)}
-                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                        referrerPolicy="no-referrer-when-downgrade"
+                      <PreviewFrame
+                        key={`${url}-${session}`}
+                        url={url}
+                        title={title}
+                        className="relative w-full h-full"
                       />
 
                       <div className="absolute bottom-[8px] left-1/2 -translate-x-1/2 z-30 w-[36%] h-[5px] rounded-full bg-white/35 pointer-events-none" />
