@@ -76,7 +76,7 @@ export function Hero({ onProjectSelect }: HeroProps) {
         >
           <Smartphone className="w-3.5 h-3.5 text-accent-orange shrink-0" strokeWidth={1.5} />
           <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.1em] sm:tracking-[0.12em] text-muted text-center">
-            Sites focados no formato mobile
+            Experiência mobile · preferência dos clientes abaixo
           </span>
         </motion.div>
 
