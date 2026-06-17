@@ -5,6 +5,6 @@
   <rect x="120" y="170" width="960" height="420" rx="12" fill="#18181b"/>
   <rect x="160" y="210" width="280" height="16" rx="4" fill="#52525b"/>
   <rect x="160" y="340" width="880" height="180" rx="8" fill="#27272a"/>
-  <text x="600" y="680" text-anchor="middle" fill="#71717a" font-family="system-ui,sans-serif" font-size="22" letter-spacing="4">PAINEL ADMIN · PARTIU PIZZA</text>
+  <text x="600" y="680" text-anchor="middle" fill="#71717a" font-family="system-ui,sans-serif" font-size="22" letter-spacing="4">PAINEL ADMIN ï¿½ PARTIU PIZZA</text>
   <text x="600" y="710" text-anchor="middle" fill="#52525b" font-family="system-ui,sans-serif" font-size="14">Substitua por screenshot em public/projects/partiu-pizza/02-admin.png</text>
 </svg>

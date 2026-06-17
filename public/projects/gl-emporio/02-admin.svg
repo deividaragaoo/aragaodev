@@ -7,6 +7,6 @@
   <rect x="160" y="250" width="400" height="10" rx="4" fill="#3f3f46"/>
   <rect x="160" y="280" width="360" height="10" rx="4" fill="#3f3f46"/>
   <rect x="160" y="340" width="880" height="180" rx="8" fill="#27272a"/>
-  <text x="600" y="680" text-anchor="middle" fill="#71717a" font-family="system-ui,sans-serif" font-size="22" letter-spacing="4">PAINEL ADMIN · GL EMPÓRIO</text>
+  <text x="600" y="680" text-anchor="middle" fill="#71717a" font-family="system-ui,sans-serif" font-size="22" letter-spacing="4">PAINEL ADMIN ï¿½ GL EMPï¿½RIO</text>
   <text x="600" y="710" text-anchor="middle" fill="#52525b" font-family="system-ui,sans-serif" font-size="14">Substitua por screenshot em public/projects/gl-emporio/02-admin.png</text>
 </svg>

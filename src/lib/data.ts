@@ -128,6 +128,56 @@ export const projects: Project[] = [
       },
     ],
   },
+  {
+    id: "pierre-onassis",
+    title: "Pierre Onassis",
+    category: "Landing Page",
+    description:
+      "Landing page premium de contato para produtor musical, com portfólio de produções, serviços, integração WhatsApp e identidade visual cinematográfica.",
+    tags: ["Next.js", "Landing Page", "UI/UX"],
+    gradient: "from-violet-500/40 via-purple-600/30 to-amber-500/20",
+    image: "/projects/pierre-onassis-logo.png",
+    imageFit: "contain",
+    imageBg: "#0a0a0a",
+    url: "https://www.pierreonassis.com/",
+    metrics: { Experiência: "10+ anos", Tipo: "Landing", Foco: "Contato" },
+    gallery: [
+      {
+        src: "/projects/pierre-onassis/01-landing.png",
+        alt: "Landing page Pierre Onassis",
+        caption: "Landing page premium",
+        fit: "cover",
+        bg: "#0a0a0a",
+        aspect: "3/2",
+        padding: false,
+      },
+    ],
+  },
+  {
+    id: "bruno-toquinho",
+    title: "Bruno Toquinho",
+    category: "Landing Page",
+    description:
+      "Landing page premium de contato para compositor e produtor musical, com sucessos, portfólio de artistas, estilos musicais e integração WhatsApp.",
+    tags: ["Next.js", "Landing Page", "UI/UX"],
+    gradient: "from-amber-500/40 via-orange-500/30 to-red-500/20",
+    image: "/projects/bruno-toquinho-logo.svg",
+    imageFit: "contain",
+    imageBg: "#0a0a0a",
+    url: "https://brunotoquinho.vercel.app/",
+    metrics: { Músicas: "100+", Carreira: "20+ anos", Foco: "Contato" },
+    gallery: [
+      {
+        src: "/projects/bruno-toquinho/01-landing.jpg",
+        alt: "Landing page Bruno Toquinho",
+        caption: "Landing page premium",
+        fit: "cover",
+        bg: "#0a0a0a",
+        aspect: "3/2",
+        padding: false,
+      },
+    ],
+  },
 ];
 
 export const services = [

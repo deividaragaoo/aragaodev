@@ -111,7 +111,7 @@ function BrowserPreview({ onProjectSelect }: { onProjectSelect: (project: Projec
           <div aria-hidden="true" />
         </div>
 
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory p-3 sm:p-0 sm:grid sm:grid-cols-3 sm:gap-px sm:overflow-visible sm:bg-white/[0.04] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory p-3 sm:p-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-px sm:overflow-visible sm:bg-white/[0.04] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {projects.map((project, i) => {
             const lightBg = isLightBackground(project.imageBg);
 
