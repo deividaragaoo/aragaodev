@@ -4,6 +4,7 @@ import Link from "next/link";
 import { contact, footerLinks } from "@/lib/data";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { WhatsAppLink } from "@/components/ui/WhatsAppLink";
+import { InstagramLink } from "@/components/ui/InstagramLink";
 
 export function Footer() {
   return (
@@ -71,6 +72,9 @@ export function Footer() {
                 </li>
                 <li>
                   <WhatsAppLink />
+                </li>
+                <li>
+                  <InstagramLink />
                 </li>
               </ul>
             </div>

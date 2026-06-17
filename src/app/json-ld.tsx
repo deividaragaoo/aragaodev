@@ -16,11 +16,7 @@ export function JsonLd() {
       "@type": "Country",
       name: "Brasil",
     },
-    sameAs: [
-      "https://github.com",
-      "https://linkedin.com",
-      "https://instagram.com",
-    ],
+    sameAs: ["https://www.instagram.com/aragao_Dev/"],
   };
 
   return (

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { contact } from "@/lib/data";
+import { InstagramLink } from "@/components/ui/InstagramLink";
 
 export function FinalCTA() {
   return (
@@ -45,6 +46,10 @@ export function FinalCTA() {
               <Button href="#projetos" variant="secondary" size="lg" showArrow={false} fullWidth className="sm:w-auto">
                 Ver portfólio
               </Button>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <InstagramLink />
             </div>
           </div>
         </motion.div>

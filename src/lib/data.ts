@@ -18,6 +18,10 @@ export const contact = {
     url: "https://wa.me/5579981575179",
     display: "(79) 98157-5179",
   },
+  instagram: {
+    url: "https://www.instagram.com/aragao_Dev/",
+    display: "@aragao_Dev",
+  },
 };
 
 export const stats = [
@@ -238,5 +242,6 @@ export const footerLinks = {
   contact: [
     { label: contact.email, href: `mailto:${contact.email}` },
     { label: contact.whatsapp.display, href: contact.whatsapp.url },
+    { label: contact.instagram.display, href: contact.instagram.url },
   ],
 };
