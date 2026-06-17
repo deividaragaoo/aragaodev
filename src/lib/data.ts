@@ -50,6 +50,7 @@ export type Project = {
   imageFit?: "cover" | "contain";
   imageBg?: string;
   heroImage?: string;
+  heroImageAspect?: "square" | "wide";
   gallery: ProjectGalleryItem[];
 };
 
@@ -89,7 +90,7 @@ export const projects: Project[] = [
     gradient: "from-orange-500/40 via-red-500/30 to-rose-500/20",
     image: "/projects/partiu-pizza-logo.png",
     imageFit: "contain",
-    imageBg: "#E85D04",
+    imageBg: "#FF8A16",
     url: "https://partiu-pizza.vercel.app/",
     metrics: { Entrega: "45 min", Nota: "4.8", Tipo: "Delivery" },
     gallery: [
@@ -114,7 +115,7 @@ export const projects: Project[] = [
     gradient: "from-amber-500/40 via-orange-600/30 to-red-600/20",
     image: "/projects/pizzaria-carioca-logo.png",
     imageFit: "contain",
-    imageBg: "#FFFFFF",
+    imageBg: "#F2F4F3",
     url: "https://pizzariacarioca.vercel.app/",
     metrics: { Entrega: "60 min", Nota: "4.8", Desde: "2015" },
     gallery: [
@@ -137,10 +138,11 @@ export const projects: Project[] = [
       "Landing page premium de contato para produtor musical, com portfólio de produções, serviços, integração WhatsApp e identidade visual cinematográfica.",
     tags: ["Next.js", "Landing Page", "UI/UX"],
     gradient: "from-violet-500/40 via-purple-600/30 to-amber-500/20",
-    image: "/projects/pierre-onassis-logo.png",
-    heroImage: "/projects/pierre-onassis-hero-logo.svg",
+    image: "/projects/pierre-onassis-logo-hero.png",
+    heroImage: "/projects/pierre-onassis-logo-hero.png",
+    heroImageAspect: "wide",
     imageFit: "contain",
-    imageBg: "#0a0a0a",
+    imageBg: "#000000",
     url: "https://www.pierreonassis.com/",
     metrics: { Experiência: "10+ anos", Tipo: "Landing", Foco: "Contato" },
     gallery: [

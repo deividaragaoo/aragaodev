@@ -19,7 +19,19 @@ interface HeroProps {
 }
 
 function isLightBackground(color?: string) {
-  return color?.toLowerCase() === "#ffffff" || color?.toLowerCase() === "#fff";
+  if (!color) return false;
+
+  const hex = color.replace("#", "");
+  const normalized =
+    hex.length === 3 ? hex.split("").map((channel) => channel + channel).join("") : hex;
+
+  if (normalized.length !== 6) return false;
+
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+
+  return 0.299 * r + 0.587 * g + 0.114 * b > 180;
 }
 
 export function Hero({ onProjectSelect }: HeroProps) {
@@ -222,6 +234,7 @@ function HeroProjectCard({
   priority?: boolean;
 }) {
   const lightBg = isLightBackground(project.imageBg);
+  const isWideLogo = project.heroImageAspect === "wide";
   const imageSrc = project.heroImage ?? project.image;
 
   return (
@@ -235,7 +248,7 @@ function HeroProjectCard({
       <div
         className={cn(
           "shrink-0 px-3 py-2.5 border-b",
-          lightBg ? "border-black/[0.06] bg-black/[0.02]" : "border-white/[0.08] bg-black/20"
+          lightBg ? "border-black/[0.06]" : "border-white/[0.08]"
         )}
       >
         <p
@@ -248,8 +261,15 @@ function HeroProjectCard({
         </p>
       </div>
 
-      <div className="relative flex flex-1 items-center justify-center px-4 py-5 sm:px-5 sm:py-6 lg:px-4 lg:py-7 min-h-[148px]">
-        <div className="relative h-[112px] w-[112px] sm:h-[128px] sm:w-[128px] lg:h-[136px] lg:w-[136px]">
+      <div className="relative flex flex-1 items-center justify-center px-3 py-5 sm:px-4 sm:py-6 lg:px-3 lg:py-7 min-h-[148px]">
+        <div
+          className={cn(
+            "relative",
+            isWideLogo
+              ? "h-[88px] w-[196px] sm:h-[96px] sm:w-[214px] lg:h-[104px] lg:w-[232px]"
+              : "h-[112px] w-[112px] sm:h-[128px] sm:w-[128px] lg:h-[136px] lg:w-[136px]"
+          )}
+        >
           <Image
             src={imageSrc}
             alt={project.title}
@@ -273,7 +293,7 @@ function HeroProjectCard({
       <div
         className={cn(
           "shrink-0 border-t px-3 py-3",
-          lightBg ? "border-black/[0.06] bg-white" : "border-white/[0.08] bg-black/30"
+          lightBg ? "border-black/[0.06]" : "border-white/[0.08]"
         )}
       >
         <p

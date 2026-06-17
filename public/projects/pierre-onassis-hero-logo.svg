@@ -5,15 +5,13 @@
       <stop offset="0.5" stop-color="#c9a96e"/>
       <stop offset="1" stop-color="#8b6b3d"/>
     </linearGradient>
-    <radialGradient id="po-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 182) rotate(90) scale(155)">
+    <radialGradient id="po-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 200) rotate(90) scale(155)">
       <stop stop-color="#c9a96e" stop-opacity="0.16"/>
       <stop offset="1" stop-color="#0a0a0a" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="400" height="400" fill="#0a0a0a"/>
-  <circle cx="200" cy="182" r="152" fill="url(#po-glow)"/>
-  <circle cx="200" cy="182" r="130" stroke="url(#po-gold)" stroke-width="2.5" opacity="0.92"/>
-  <text x="200" y="224" text-anchor="middle" fill="url(#po-gold)" font-family="Georgia, 'Times New Roman', serif" font-size="136" font-weight="700" letter-spacing="-0.08em">PO</text>
-  <text x="200" y="306" text-anchor="middle" fill="#f4f4f5" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="600" letter-spacing="0.22em">PIERRE</text>
-  <text x="200" y="338" text-anchor="middle" fill="#a1a1aa" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="500" letter-spacing="0.34em">ONASSIS</text>
+  <circle cx="200" cy="200" r="152" fill="url(#po-glow)"/>
+  <circle cx="200" cy="200" r="130" stroke="url(#po-gold)" stroke-width="2.5" opacity="0.92"/>
+  <text x="200" y="234" text-anchor="middle" fill="url(#po-gold)" font-family="Georgia, 'Times New Roman', serif" font-size="136" font-weight="700" letter-spacing="-0.08em">PO</text>
 </svg>

@@ -5,15 +5,13 @@
       <stop offset="0.5" stop-color="#d4a853"/>
       <stop offset="1" stop-color="#a67c2e"/>
     </linearGradient>
-    <radialGradient id="bt-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 188) rotate(90) scale(150)">
+    <radialGradient id="bt-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 200) rotate(90) scale(150)">
       <stop stop-color="#d4a853" stop-opacity="0.18"/>
       <stop offset="1" stop-color="#0a0a0a" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="400" height="400" fill="#0a0a0a"/>
-  <circle cx="200" cy="188" r="150" fill="url(#bt-glow)"/>
-  <circle cx="200" cy="188" r="128" stroke="url(#bt-gold)" stroke-width="2.5" opacity="0.9"/>
-  <text x="200" y="228" text-anchor="middle" fill="url(#bt-gold)" font-family="Georgia, 'Times New Roman', serif" font-size="148" font-weight="700" letter-spacing="-0.06em">BT</text>
-  <text x="200" y="312" text-anchor="middle" fill="#f4f4f5" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" letter-spacing="0.34em">BRUNO</text>
-  <text x="200" y="346" text-anchor="middle" fill="#a1a1aa" font-family="system-ui, -apple-system, sans-serif" font-size="17" font-weight="500" letter-spacing="0.4em">TOQUINHO</text>
+  <circle cx="200" cy="200" r="150" fill="url(#bt-glow)"/>
+  <circle cx="200" cy="200" r="128" stroke="url(#bt-gold)" stroke-width="2.5" opacity="0.9"/>
+  <text x="200" y="238" text-anchor="middle" fill="url(#bt-gold)" font-family="Georgia, 'Times New Roman', serif" font-size="148" font-weight="700" letter-spacing="-0.06em">BT</text>
 </svg>
