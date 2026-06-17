@@ -1,11 +1,12 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Smartphone } from "lucide-react";
+import Image from "next/image";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { contact } from "@/lib/data";
 import { projects, type Project } from "@/lib/data";
-import { ProjectImage } from "@/components/ui/ProjectImage";
 import { cn } from "@/lib/utils";
 
 const fadeUp = {
@@ -79,21 +80,58 @@ export function Hero({ onProjectSelect }: HeroProps) {
             Experiência mobile · preferência dos clientes abaixo
           </span>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          className="relative w-full max-w-4xl mx-auto"
-        >
-          <BrowserPreview onProjectSelect={onProjectSelect} />
-        </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-full max-w-6xl mx-auto"
+      >
+        <BrowserPreview onProjectSelect={onProjectSelect} />
+      </motion.div>
     </section>
   );
 }
 
 function BrowserPreview({ onProjectSelect }: { onProjectSelect: (project: Project) => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setCanScrollLeft(scrollLeft > 8);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    updateScrollState();
+    container.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      container.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  const scrollByCard = (direction: -1 | 1) => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const card = container.querySelector<HTMLElement>("[data-hero-card]");
+    const gap = 12;
+    const distance = card ? card.offsetWidth + gap : container.clientWidth * 0.75;
+    container.scrollBy({ left: direction * distance, behavior: "smooth" });
+  };
+
   return (
     <div className="relative w-full mx-auto">
       <div className="surface rounded-2xl overflow-hidden shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_24px_80px_rgba(0,0,0,0.5)]">
@@ -111,75 +149,142 @@ function BrowserPreview({ onProjectSelect }: { onProjectSelect: (project: Projec
           <div aria-hidden="true" />
         </div>
 
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory p-3 sm:p-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 sm:gap-px sm:overflow-visible sm:bg-white/[0.04] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {projects.map((project, i) => {
-            const lightBg = isLightBackground(project.imageBg);
+        <div className="relative lg:static">
+          <button
+            type="button"
+            onClick={() => scrollByCard(-1)}
+            disabled={!canScrollLeft}
+            aria-label="Projeto anterior"
+            className={cn(
+              "lg:hidden absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-background/90 backdrop-blur-sm transition-all",
+              canScrollLeft
+                ? "text-foreground hover:border-white/20 active:scale-95"
+                : "text-subtle opacity-40 pointer-events-none"
+            )}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
 
-            return (
+          <button
+            type="button"
+            onClick={() => scrollByCard(1)}
+            disabled={!canScrollRight}
+            aria-label="Próximo projeto"
+            className={cn(
+              "lg:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-background/90 backdrop-blur-sm transition-all",
+              canScrollRight
+                ? "text-foreground hover:border-white/20 active:scale-95"
+                : "text-subtle opacity-40 pointer-events-none"
+            )}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 py-3 lg:px-0 lg:py-0 lg:grid lg:grid-cols-5 lg:gap-px lg:overflow-visible lg:bg-white/[0.04] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {projects.map((project, i) => (
               <motion.div
                 key={project.id}
+                data-hero-card
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 + i * 0.08 }}
-                className="min-w-[78%] shrink-0 snap-center sm:min-w-0 sm:shrink rounded-xl sm:rounded-none overflow-hidden border border-white/[0.06] sm:border-0"
+                className="min-w-[74%] shrink-0 snap-center sm:min-w-[46%] lg:min-w-0 lg:shrink rounded-xl lg:rounded-none overflow-hidden border border-white/[0.06] lg:border-0"
               >
-                <button
-                  type="button"
-                  onClick={() => onProjectSelect(project)}
-                  className="group relative block w-full aspect-[4/3] overflow-hidden text-left active:opacity-90"
-                  style={{ backgroundColor: project.imageBg ?? "#0a0a0a" }}
-                  aria-label={`Ver detalhes do projeto ${project.title}`}
-                >
-                  <ProjectImage
-                    project={project}
-                    variant="hero"
-                    sizes="(max-width: 640px) 78vw, (max-width: 768px) 33vw, 400px"
-                    priority={i === 0}
-                    className="transition-transform duration-500 group-hover:scale-[1.03] group-active:scale-[1.02]"
-                  />
-
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 group-active:bg-black/40 transition-colors duration-300 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 group-active:opacity-100 sm:group-active:opacity-0">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-foreground text-background text-[11px] font-medium">
-                      Ver projeto
-                      <ArrowUpRight className="w-3 h-3" />
-                    </span>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "absolute bottom-0 inset-x-0 p-3 sm:group-hover:opacity-0 transition-opacity duration-300",
-                      lightBg
-                        ? "bg-gradient-to-t from-white via-white/80 to-transparent"
-                        : "bg-gradient-to-t from-black/80 via-black/40 to-transparent"
-                    )}
-                  >
-                    <p
-                      className={cn(
-                        "text-[10px] font-mono uppercase tracking-wider mb-0.5",
-                        lightBg ? "text-zinc-500" : "text-white/60"
-                      )}
-                    >
-                      {project.category}
-                    </p>
-                    <p
-                      className={cn(
-                        "text-xs sm:text-sm font-medium truncate",
-                        lightBg ? "text-zinc-900" : "text-white"
-                      )}
-                    >
-                      {project.title}
-                    </p>
-                  </div>
-                </button>
+                <HeroProjectCard
+                  project={project}
+                  onSelect={onProjectSelect}
+                  priority={i === 0}
+                />
               </motion.div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
 
       <p className="text-center text-[10px] sm:text-[11px] text-subtle font-mono mt-3 sm:mt-4 tracking-wide px-2">
-        Deslize ou toque para ver detalhes do projeto
+        <span className="lg:hidden">Deslize ou use as setas para ver os projetos</span>
+        <span className="hidden lg:inline">Clique em um projeto para ver detalhes</span>
       </p>
     </div>
+  );
+}
+
+function HeroProjectCard({
+  project,
+  onSelect,
+  priority,
+}: {
+  project: Project;
+  onSelect: (project: Project) => void;
+  priority?: boolean;
+}) {
+  const lightBg = isLightBackground(project.imageBg);
+  const imageSrc = project.heroImage ?? project.image;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(project)}
+      className="group relative flex h-full w-full min-h-[248px] lg:min-h-[280px] flex-col overflow-hidden text-left active:opacity-95"
+      style={{ backgroundColor: project.imageBg ?? "#0a0a0a" }}
+      aria-label={`Ver detalhes do projeto ${project.title}`}
+    >
+      <div
+        className={cn(
+          "shrink-0 px-3 py-2.5 border-b",
+          lightBg ? "border-black/[0.06] bg-black/[0.02]" : "border-white/[0.08] bg-black/20"
+        )}
+      >
+        <p
+          className={cn(
+            "text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.14em] truncate",
+            lightBg ? "text-zinc-500" : "text-white/55"
+          )}
+        >
+          {project.category}
+        </p>
+      </div>
+
+      <div className="relative flex flex-1 items-center justify-center px-4 py-5 sm:px-5 sm:py-6 lg:px-4 lg:py-7 min-h-[148px]">
+        <div className="relative h-[112px] w-[112px] sm:h-[128px] sm:w-[128px] lg:h-[136px] lg:w-[136px]">
+          <Image
+            src={imageSrc}
+            alt={project.title}
+            fill
+            priority={priority}
+            quality={100}
+            unoptimized
+            sizes="(max-width: 1024px) 128px, 136px"
+            className="object-contain transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/45 group-hover:opacity-100 group-active:bg-black/35 group-active:opacity-100 lg:group-active:opacity-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-[11px] font-medium text-background">
+            Ver projeto
+            <ArrowUpRight className="w-3 h-3" />
+          </span>
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          "shrink-0 border-t px-3 py-3",
+          lightBg ? "border-black/[0.06] bg-white" : "border-white/[0.08] bg-black/30"
+        )}
+      >
+        <p
+          className={cn(
+            "text-sm font-semibold tracking-[-0.02em] truncate",
+            lightBg ? "text-zinc-900" : "text-white"
+          )}
+        >
+          {project.title}
+        </p>
+      </div>
+    </button>
   );
 }

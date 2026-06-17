@@ -49,6 +49,7 @@ export type Project = {
   metrics: Record<string, string>;
   imageFit?: "cover" | "contain";
   imageBg?: string;
+  heroImage?: string;
   gallery: ProjectGalleryItem[];
 };
 
@@ -137,6 +138,7 @@ export const projects: Project[] = [
     tags: ["Next.js", "Landing Page", "UI/UX"],
     gradient: "from-violet-500/40 via-purple-600/30 to-amber-500/20",
     image: "/projects/pierre-onassis-logo.png",
+    heroImage: "/projects/pierre-onassis-hero-logo.svg",
     imageFit: "contain",
     imageBg: "#0a0a0a",
     url: "https://www.pierreonassis.com/",
