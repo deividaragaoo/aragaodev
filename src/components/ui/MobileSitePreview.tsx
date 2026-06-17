@@ -200,14 +200,18 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
             </motion.div>
           ) : (
             <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 16 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-0 z-[141] flex flex-col items-center justify-center px-4 py-6 pointer-events-none overflow-y-auto"
+              className="fixed inset-0 z-[141] flex flex-col pointer-events-none"
+              style={{
+                paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))",
+                paddingBottom: "max(1rem, env(safe-area-inset-bottom, 1rem))",
+              }}
             >
-              <div className="pointer-events-auto flex flex-col items-center w-full max-w-[460px]">
-                <div className="flex items-center justify-between w-full mb-4 px-1">
+              <div className="pointer-events-auto flex flex-col h-full w-full max-w-[460px] mx-auto px-4 min-h-0">
+                <div className="flex items-center justify-between gap-3 shrink-0 pb-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <Smartphone className="w-4 h-4 text-muted shrink-0" />
                     <div className="min-w-0">
@@ -218,21 +222,23 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-background/80 hover:border-white/20 transition-colors shrink-0 ml-3"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-background/90 hover:border-white/20 transition-colors shrink-0"
                     aria-label="Fechar preview"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="relative w-full flex justify-center">
+                <div className="relative flex-1 min-h-0 flex items-center justify-center w-full">
                   <div className="absolute -inset-4 rounded-[4rem] bg-gradient-to-b from-white/[0.08] to-transparent opacity-60 blur-md pointer-events-none" />
 
                   <div
-                    className="relative rounded-[3.25rem] border-[3px] border-[#48484a] bg-[#1c1c1e] p-[11px] shadow-[0_40px_100px_rgba(0,0,0,0.65),inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                    className="relative rounded-[3.25rem] border-[3px] border-[#48484a] bg-[#1c1c1e] p-[11px] shadow-[0_40px_100px_rgba(0,0,0,0.65),inset_0_0_0_1px_rgba(255,255,255,0.06)] max-h-full"
                     style={{
-                      height: "min(88vh, 932px)",
-                      width: "min(430px, calc(min(88vh, 932px) * 430 / 932))",
+                      height: "min(100%, 932px)",
+                      aspectRatio: `${DEVICE_WIDTH} / ${DEVICE_HEIGHT}`,
+                      width: "auto",
+                      maxWidth: "100%",
                     }}
                   >
                     <div className="absolute -left-[5px] top-[22%] w-[3px] h-8 rounded-l-sm bg-[#3a3a3c]" />
@@ -253,27 +259,29 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                   </div>
                 </div>
 
-                <p className="mt-3 text-[10px] font-mono text-subtle tracking-wider uppercase">
-                  Preview · iPhone 14 Pro Max ({DEVICE_WIDTH}×{DEVICE_HEIGHT})
-                </p>
+                <div className="shrink-0 pt-3 space-y-3">
+                  <p className="text-center text-[10px] font-mono text-subtle tracking-wider uppercase">
+                    Preview · iPhone 14 Pro Max ({DEVICE_WIDTH}×{DEVICE_HEIGHT})
+                  </p>
 
-                <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-5 py-2.5 rounded-full text-sm font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors min-h-[44px]"
-                  >
-                    Voltar ao portfólio
-                  </button>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors min-h-[44px]"
-                  >
-                    Abrir em nova aba
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-5 py-2.5 rounded-full text-sm font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors min-h-[44px]"
+                    >
+                      Voltar ao portfólio
+                    </button>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors min-h-[44px] px-2"
+                    >
+                      Abrir em nova aba
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </motion.div>

@@ -64,7 +64,7 @@ export const projects: Project[] = [
     image: "/projects/gl-emporio-logo.png",
     imageFit: "contain",
     imageBg: "#000000",
-    url: "https://www.glemporio75.com/",
+    url: "https://glemporio.vercel.app/",
     metrics: { Pedidos: "20K+", Entrega: "Rápida", Desde: "2021" },
     gallery: [
       {
