@@ -194,7 +194,7 @@ function BrowserPreview({ onProjectSelect }: { onProjectSelect: (project: Projec
 
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 py-3 lg:px-0 lg:py-0 lg:grid lg:grid-cols-5 lg:gap-px lg:overflow-visible lg:bg-white/[0.04] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 py-3 lg:px-0 lg:py-0 lg:grid lg:grid-cols-6 lg:gap-px lg:overflow-visible lg:bg-white/[0.04] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {projects.map((project, i) => (
               <motion.div

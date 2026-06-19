@@ -186,6 +186,33 @@ export const projects: Project[] = [
       },
     ],
   },
+  {
+    id: "emporio-motors",
+    title: "Empório Motors",
+    category: "Concessionária",
+    description:
+      "Site institucional premium para concessionária de veículos de luxo, com catálogo de destaques, fluxo de venda de veículos, integração Instagram e atendimento via consultores especializados.",
+    tags: ["Next.js", "Landing Page", "UI/UX"],
+    gradient: "from-emerald-500/40 via-green-600/30 to-black/20",
+    image: "/projects/emporio-motors-logo.svg",
+    heroImage: "/projects/emporio-motors-logo.svg",
+    heroImageAspect: "wide",
+    imageFit: "contain",
+    imageBg: "#0a0a0a",
+    url: "https://emporiomotors-cyan.vercel.app/",
+    metrics: { Segmento: "Premium", Local: "Feira de Santana", Foco: "Leads" },
+    gallery: [
+      {
+        src: "/projects/emporio-motors/01-landing.png",
+        alt: "Landing page Empório Motors",
+        caption: "Concessionária premium",
+        fit: "cover",
+        bg: "#0a0a0a",
+        aspect: "3/2",
+        padding: false,
+      },
+    ],
+  },
 ];
 
 export const services = [

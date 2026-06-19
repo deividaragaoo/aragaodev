@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <g transform="translate(4,12)">
+    <path d="M8 4L24 4L16 52L0 52Z" fill="#10b981"/>
+    <path d="M20 4L36 4L28 52L12 52Z" fill="#059669" opacity="0.85"/>
+    <path d="M32 4L48 4L40 52L24 52Z" fill="#34d399" opacity="0.7"/>
+  </g>
+  <text x="64" y="34" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="700" letter-spacing="0.22em">EMPÓRIO</text>
+  <text x="64" y="56" fill="#10b981" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="700" letter-spacing="0.22em">MOTORS</text>
+</svg>
