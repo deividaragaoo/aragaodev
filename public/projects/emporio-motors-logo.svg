@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" fill="none">
+  <defs>
+    <linearGradient id="em-green" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#34d058"/>
+      <stop offset="1" stop-color="#1fa34a"/>
+    </linearGradient>
+    <linearGradient id="em-green-dark" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#17803a"/>
+      <stop offset="1" stop-color="#0f5c2a"/>
+    </linearGradient>
+    <linearGradient id="em-lime" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#d9f99d"/>
+      <stop offset="1" stop-color="#84cc16"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(8 10)">
+    <path d="M18 8 L58 8 L72 28 L32 28 Z" fill="url(#em-green)"/>
+    <path d="M18 8 L32 28 L18 28 Z" fill="url(#em-lime)"/>
+    <path d="M18 36 L58 36 L72 56 L32 56 Z" fill="url(#em-green)"/>
+    <path d="M18 36 L32 56 L18 56 Z" fill="url(#em-lime)"/>
+    <path d="M18 64 L58 64 L72 84 L32 84 Z" fill="url(#em-green-dark)"/>
+    <path d="M18 64 L32 84 L18 84 Z" fill="url(#em-lime)"/>
+  </g>
+
+  <text x="98" y="52" fill="#ffffff" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34" font-weight="700" letter-spacing="0.08em">EMP&#211;RIO</text>
+  <text x="98" y="88" fill="#34d058" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="28" font-weight="600" letter-spacing="0.22em">MOTORS</text>
+</svg>

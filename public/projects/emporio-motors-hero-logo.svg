@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140" fill="none">
+  <defs>
+    <linearGradient id="emh-green" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#34d058"/>
+      <stop offset="1" stop-color="#1fa34a"/>
+    </linearGradient>
+    <linearGradient id="emh-green-dark" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#17803a"/>
+      <stop offset="1" stop-color="#0f5c2a"/>
+    </linearGradient>
+    <linearGradient id="emh-lime" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#d9f99d"/>
+      <stop offset="1" stop-color="#84cc16"/>
+    </linearGradient>
+    <radialGradient id="emh-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(70 70) rotate(90) scale(70)">
+      <stop stop-color="#34d058" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="520" height="140" fill="#0a0a0a"/>
+  <circle cx="70" cy="70" r="62" fill="url(#emh-glow)"/>
+
+  <g transform="translate(18 18)">
+    <path d="M20 10 L64 10 L80 34 L36 34 Z" fill="url(#emh-green)"/>
+    <path d="M20 10 L36 34 L20 34 Z" fill="url(#emh-lime)"/>
+    <path d="M20 44 L64 44 L80 68 L36 68 Z" fill="url(#emh-green)"/>
+    <path d="M20 44 L36 68 L20 68 Z" fill="url(#emh-lime)"/>
+    <path d="M20 78 L64 78 L80 102 L36 102 Z" fill="url(#emh-green-dark)"/>
+    <path d="M20 78 L36 102 L20 102 Z" fill="url(#emh-lime)"/>
+  </g>
+
+  <text x="118" y="62" fill="#ffffff" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="38" font-weight="700" letter-spacing="0.08em">EMP&#211;RIO</text>
+  <text x="118" y="102" fill="#34d058" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" font-weight="600" letter-spacing="0.22em">MOTORS</text>
+</svg>

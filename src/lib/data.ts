@@ -70,7 +70,7 @@ export const projects: Project[] = [
     image: "/projects/gl-emporio-logo.png",
     imageFit: "contain",
     imageBg: "#000000",
-    url: "https://glemporio.vercel.app/",
+    url: "https://glemporio75.com/",
     metrics: { Pedidos: "20K+", Entrega: "Rápida", Desde: "2021" },
     gallery: [
       {
@@ -194,11 +194,12 @@ export const projects: Project[] = [
       "Site institucional premium para concessionária de veículos de luxo, com catálogo de destaques, fluxo de venda de veículos, integração Instagram e atendimento via consultores especializados.",
     tags: ["Next.js", "Landing Page", "UI/UX"],
     gradient: "from-emerald-500/40 via-green-600/30 to-black/20",
-    image: "/projects/emporio-motors-logo.png",
-    heroImage: "/projects/emporio-motors-logo.png",
+    image: "/projects/emporio-motors-logo.svg",
+    heroImage: "/projects/emporio-motors-hero-logo.svg",
+    heroImageAspect: "wide",
     imageFit: "contain",
     imageBg: "#0a0a0a",
-    url: "https://emporiomotors-cyan.vercel.app/",
+    url: "https://emporiomotors.com.br/",
     metrics: { Segmento: "Premium", Local: "Feira de Santana", Foco: "Leads" },
     gallery: [
       {
