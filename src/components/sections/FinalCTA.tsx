@@ -1,9 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Instagram } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { contact } from "@/lib/data";
+
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 interface FinalCTAProps {
   onRequestContact: () => void;
@@ -64,7 +82,7 @@ export function FinalCTA({ onRequestContact }: FinalCTAProps) {
                 whileTap={{ scale: 0.98 }}
                 className="inline-flex w-full sm:w-auto min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/10 bg-transparent px-7 py-3.5 text-sm font-medium text-foreground transition-all duration-200 hover:border-white/20 hover:bg-white/[0.03] active:scale-[0.98] sm:text-base"
               >
-                <Instagram className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                <InstagramIcon className="h-4 w-4 shrink-0" />
                 Instagram
               </motion.a>
             </div>
