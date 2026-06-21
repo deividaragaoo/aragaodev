@@ -53,16 +53,17 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
             className="fixed inset-0 z-[140] bg-black/75 backdrop-blur-md"
           />
 
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="contact-name-panel-title"
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-4 top-[max(1.5rem,env(safe-area-inset-top,1.5rem))] z-[141] mx-auto w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0a0a0a] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.65)] sm:p-6"
-          >
+          <div className="fixed inset-0 z-[141] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="contact-name-panel-title"
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.98 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="pointer-events-auto relative w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0a0a0a] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.65)] sm:p-6"
+            >
             <button
               type="button"
               onClick={onClose}
@@ -124,7 +125,8 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
                 <ArrowRight className="h-4 w-4" />
               </button>
             </form>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
