@@ -11,9 +11,10 @@ import type { Project } from "@/lib/data";
 interface ProjectModalProps {
   project: Project | null;
   onClose: () => void;
+  onRequestContact: () => void;
 }
 
-export function ProjectModal({ project, onClose }: ProjectModalProps) {
+export function ProjectModal({ project, onClose, onRequestContact }: ProjectModalProps) {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   useEffect(() => {
@@ -111,14 +112,13 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
                     <span className="whitespace-nowrap">Ver site no celular</span>
                   </Button>
                   <Button
-                    href="#contato"
                     variant="secondary"
                     showArrow={false}
                     fullWidth
                     className="sm:flex-1"
-                    onClick={onClose}
+                    onClick={onRequestContact}
                   >
-                    Projeto similar
+                    Entrar em contato
                   </Button>
                 </div>
               </div>

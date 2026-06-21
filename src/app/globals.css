@@ -185,3 +185,114 @@ body {
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   background-size: 72px 72px;
 }
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.hero-premium-text {
+  background: linear-gradient(to right, #ff7a18, #ff3d00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-btn-primary {
+  background: linear-gradient(135deg, #ff7a18 0%, #ff5b1f 50%, #ff3d00 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 91, 31, 0.35),
+    0 8px 32px rgba(255, 91, 31, 0.35),
+    0 2px 8px rgba(255, 61, 0, 0.25);
+}
+
+.hero-btn-primary:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 91, 31, 0.5),
+    0 12px 40px rgba(255, 91, 31, 0.45),
+    0 4px 12px rgba(255, 61, 0, 0.35);
+}
+
+.hero-btn-secondary {
+  border: 1px solid rgba(255, 91, 31, 0.35);
+  background: rgba(255, 91, 31, 0.04);
+}
+
+.hero-btn-secondary:hover {
+  border-color: rgba(255, 91, 31, 0.6);
+  background: rgba(255, 91, 31, 0.08);
+  box-shadow: 0 0 24px rgba(255, 91, 31, 0.15);
+}
+
+.hero-glass {
+  background: rgba(12, 12, 12, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 32px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hero-float-icon {
+  background: rgba(8, 8, 8, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 91, 31, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 32px rgba(255, 91, 31, 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes hero-float-delayed {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.hero-float-a {
+  animation: hero-float 4s ease-in-out infinite;
+}
+
+.hero-float-b {
+  animation: hero-float-delayed 5s ease-in-out infinite 0.5s;
+}
+
+.hero-float-c {
+  animation: hero-float 4.5s ease-in-out infinite 1s;
+}
+
+@keyframes hero-particle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.4);
+  }
+}
+
+.hero-particle {
+  animation: hero-particle 3s ease-in-out infinite;
+}

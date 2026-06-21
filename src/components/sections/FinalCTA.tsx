@@ -2,10 +2,13 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { contact } from "@/lib/data";
 import { InstagramLink } from "@/components/ui/InstagramLink";
 
-export function FinalCTA() {
+interface FinalCTAProps {
+  onRequestContact: () => void;
+}
+
+export function FinalCTA({ onRequestContact }: FinalCTAProps) {
   return (
     <section id="contato" className="section-padding relative scroll-mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -35,11 +38,11 @@ export function FinalCTA() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md sm:max-w-none mx-auto">
               <Button
-                href={contact.whatsapp.url}
                 variant="primary"
                 size="lg"
                 fullWidth
                 className="sm:w-auto"
+                onClick={onRequestContact}
               >
                 Agendar conversa
               </Button>
@@ -48,8 +51,12 @@ export function FinalCTA() {
               </Button>
             </div>
 
-            <div className="mt-6 flex justify-center">
-              <InstagramLink />
+            <div className="mt-8 flex w-full flex-col items-center gap-4">
+              <div className="h-px w-12 bg-white/10" aria-hidden="true" />
+              <InstagramLink
+                align="center"
+                className="rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 hover:border-[#E4405F]/30 hover:bg-white/[0.04]"
+              />
             </div>
           </div>
         </motion.div>

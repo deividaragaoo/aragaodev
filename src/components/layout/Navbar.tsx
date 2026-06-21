@@ -4,11 +4,15 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { contact, navLinks } from "@/lib/data";
+import { navLinks } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
-export function Navbar() {
+interface NavbarProps {
+  onRequestContact: () => void;
+}
+
+export function Navbar({ onRequestContact }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -50,7 +54,12 @@ export function Navbar() {
           </nav>
 
           <div className="relative z-10 shrink-0 hidden md:block">
-            <Button href={contact.whatsapp.url} variant="primary" size="sm" showArrow={false}>
+            <Button
+              variant="primary"
+              size="sm"
+              showArrow={false}
+              onClick={onRequestContact}
+            >
               Contato
             </Button>
           </div>
@@ -103,11 +112,14 @@ export function Navbar() {
                   </Link>
                 ))}
                 <Button
-                  href={contact.whatsapp.url}
                   variant="primary"
                   showArrow={false}
                   fullWidth
                   className="mt-3"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onRequestContact();
+                  }}
                 >
                   Contato
                 </Button>

@@ -18,31 +18,53 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 interface WhatsAppLinkProps {
   className?: string;
+  onRequestContact?: () => void;
 }
 
-export function WhatsAppLink({ className }: WhatsAppLinkProps) {
+export function WhatsAppLink({ className, onRequestContact }: WhatsAppLinkProps) {
+  const content = (
+    <>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.02] text-muted/70 transition-all duration-300 group-hover:border-white/[0.14] group-hover:text-[#25D366]">
+        <WhatsAppIcon className="h-3.5 w-3.5" />
+      </span>
+      <span className="min-w-0 text-left">
+        <span className="block whitespace-nowrap tracking-[-0.01em] text-foreground/90 transition-colors group-hover:text-foreground">
+          {contact.whatsapp.display}
+        </span>
+        <span className="block text-[11px] text-subtle transition-colors group-hover:text-muted">
+          WhatsApp
+        </span>
+      </span>
+    </>
+  );
+
+  const sharedClassName = cn(
+    "group inline-flex items-center gap-2.5 text-sm font-light text-muted transition-colors duration-300 hover:text-foreground",
+    className
+  );
+
+  if (onRequestContact) {
+    return (
+      <button
+        type="button"
+        onClick={onRequestContact}
+        aria-label={`Conversar no WhatsApp: ${contact.whatsapp.display}`}
+        className={cn(sharedClassName, "cursor-pointer text-left")}
+      >
+        {content}
+      </button>
+    );
+  }
+
   return (
     <a
       href={contact.whatsapp.url}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Conversar no WhatsApp: ${contact.whatsapp.display}`}
-      className={cn(
-        "group inline-flex items-center gap-2.5 text-sm font-light text-muted hover:text-foreground transition-colors duration-300",
-        className
-      )}
+      className={sharedClassName}
     >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.02] text-muted/70 transition-all duration-300 group-hover:border-white/[0.14] group-hover:text-[#25D366]">
-        <WhatsAppIcon className="h-3.5 w-3.5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block whitespace-nowrap tracking-[-0.01em] text-foreground/90 group-hover:text-foreground transition-colors">
-          {contact.whatsapp.display}
-        </span>
-        <span className="block text-[11px] text-subtle group-hover:text-muted transition-colors">
-          WhatsApp
-        </span>
-      </span>
+      {content}
     </a>
   );
 }
