@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Instagram } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { InstagramLink } from "@/components/ui/InstagramLink";
+import { contact } from "@/lib/data";
 
 interface FinalCTAProps {
   onRequestContact: () => void;
@@ -36,7 +37,7 @@ export function FinalCTA({ onRequestContact }: FinalCTAProps) {
               Conte sua ideia. Respondemos em até 24 horas com um plano claro e orçamento sem compromisso.
             </p>
 
-            <div className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
+            <div className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
               <Button
                 variant="primary"
                 size="lg"
@@ -54,14 +55,18 @@ export function FinalCTA({ onRequestContact }: FinalCTAProps) {
               >
                 Ver portfólio
               </Button>
-            </div>
-
-            <div className="mt-8 flex w-full flex-col items-center gap-4">
-              <div className="h-px w-12 bg-white/10" aria-hidden="true" />
-              <InstagramLink
-                align="center"
-                className="rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4 hover:border-[#E4405F]/30 hover:bg-white/[0.04]"
-              />
+              <motion.a
+                href={contact.instagram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Seguir no Instagram: ${contact.instagram.display}`}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex w-full sm:w-auto min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/10 bg-transparent px-7 py-3.5 text-sm font-medium text-foreground transition-all duration-200 hover:border-white/20 hover:bg-white/[0.03] active:scale-[0.98] sm:text-base"
+              >
+                <Instagram className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                Instagram
+              </motion.a>
             </div>
           </div>
         </motion.div>
