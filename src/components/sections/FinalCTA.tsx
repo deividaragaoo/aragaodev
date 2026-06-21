@@ -36,17 +36,22 @@ export function FinalCTA({ onRequestContact }: FinalCTAProps) {
               Conte sua ideia. Respondemos em até 24 horas com um plano claro e orçamento sem compromisso.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md sm:max-w-none mx-auto">
+            <div className="mx-auto flex w-full max-w-md flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:items-center sm:justify-center">
               <Button
                 variant="primary"
                 size="lg"
-                fullWidth
-                className="sm:w-auto"
+                className="w-full sm:w-auto"
                 onClick={onRequestContact}
               >
                 Agendar conversa
               </Button>
-              <Button href="#projetos" variant="secondary" size="lg" showArrow={false} fullWidth className="sm:w-auto">
+              <Button
+                href="#projetos"
+                variant="secondary"
+                size="lg"
+                showArrow={false}
+                className="w-full sm:w-auto"
+              >
                 Ver portfólio
               </Button>
             </div>

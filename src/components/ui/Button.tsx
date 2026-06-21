@@ -62,8 +62,14 @@ export function Button({
 
   if (href) {
     const isExternal = href.startsWith("http") || href.startsWith("mailto:");
+    const wrapperClassName = cn(fullWidth && "w-full");
+
     return (
-      <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} className={fullWidth ? "w-full" : undefined}>
+      <motion.div
+        whileHover={{ y: -1 }}
+        whileTap={{ scale: 0.98 }}
+        className={wrapperClassName}
+      >
         {isExternal ? (
           <a
             href={href}
