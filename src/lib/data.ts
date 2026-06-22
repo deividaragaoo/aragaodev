@@ -187,6 +187,31 @@ export const projects: Project[] = [
     ],
   },
   {
+    id: "mana-pizzaria",
+    title: "Mana Pizzaria",
+    category: "Sistema Administrativo",
+    description:
+      "Painel administrativo interno para gestão de pedidos, produtos, estoque, financeiro e relatórios — com dashboard em tempo real e operação centralizada.",
+    tags: ["Next.js", "Dashboard", "SaaS"],
+    gradient: "from-green-500/40 via-yellow-500/30 to-red-500/20",
+    image: "/projects/mana-pizzaria-logo.png",
+    imageFit: "contain",
+    imageBg: "#030303",
+    url: "https://manapizzaria.vercel.app/",
+    metrics: { Módulos: "6+", Tipo: "Admin", Foco: "Gestão" },
+    gallery: [
+      {
+        src: "/projects/mana-pizzaria/02-admin.jpg",
+        alt: "Painel administrativo Mana Pizzaria",
+        caption: "Painel administrativo",
+        fit: "cover",
+        bg: "#0a0a0a",
+        aspect: "3/2",
+        padding: false,
+      },
+    ],
+  },
+  {
     id: "emporio-motors",
     title: "Empório Motors",
     category: "Concessionária",
