@@ -15,9 +15,7 @@ type Client = {
   id: number;
   name: string;
   company?: string | null;
-  document?: string | null;
   whatsapp?: string | null;
-  email?: string | null;
   address?: string | null;
 };
 
@@ -130,9 +128,7 @@ export function DocumentForm({
           <div className="mt-4 grid gap-2 rounded-xl border border-white/[0.06] bg-black/20 p-4 text-sm text-muted sm:grid-cols-2">
             <p>Nome: {selectedClient.name}</p>
             <p>Empresa: {selectedClient.company || "—"}</p>
-            <p>CPF/CNPJ: {selectedClient.document || "—"}</p>
             <p>WhatsApp: {selectedClient.whatsapp || "—"}</p>
-            <p>E-mail: {selectedClient.email || "—"}</p>
             <p>Endereço: {selectedClient.address || "—"}</p>
           </div>
         ) : null}

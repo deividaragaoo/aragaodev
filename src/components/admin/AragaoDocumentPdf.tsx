@@ -178,9 +178,7 @@ export function AragaoDocumentPdf({
         <Text style={styles.sectionTitle}>Cliente</Text>
         <Text>{doc.client.name}</Text>
         {doc.client.company ? <Text>{doc.client.company}</Text> : null}
-        {doc.client.document ? <Text>CPF/CNPJ: {doc.client.document}</Text> : null}
         {doc.client.whatsapp ? <Text>WhatsApp: {doc.client.whatsapp}</Text> : null}
-        {doc.client.email ? <Text>E-mail: {doc.client.email}</Text> : null}
         {doc.client.address ? <Text>Endereço: {doc.client.address}</Text> : null}
 
         <Text style={styles.sectionTitle}>Serviços</Text>

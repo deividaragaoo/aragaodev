@@ -31,7 +31,7 @@ export default async function ClientesPage({
         <input
           name="q"
           defaultValue={q}
-          placeholder="Pesquisar por nome, empresa, documento..."
+          placeholder="Pesquisar por nome, empresa ou WhatsApp..."
           className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm outline-none focus:border-[#ff6b35]/50"
         />
       </form>
@@ -43,11 +43,10 @@ export default async function ClientesPage({
         />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/[0.06]">
-          <div className="hidden grid-cols-[1.4fr_1fr_1fr_1fr_auto] gap-3 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] text-muted md:grid">
+          <div className="hidden grid-cols-[1.4fr_1fr_1fr_auto] gap-3 border-b border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] text-muted md:grid">
             <span>Nome</span>
             <span>Empresa</span>
             <span>WhatsApp</span>
-            <span>E-mail</span>
             <span />
           </div>
           <div className="divide-y divide-white/[0.05]">
@@ -55,7 +54,7 @@ export default async function ClientesPage({
               <Link
                 key={client.id}
                 href={`/admin/clientes/${client.id}`}
-                className="grid gap-1 px-4 py-3 transition hover:bg-white/[0.02] md:grid-cols-[1.4fr_1fr_1fr_1fr_auto] md:items-center md:gap-3"
+                className="grid gap-1 px-4 py-3 transition hover:bg-white/[0.02] md:grid-cols-[1.4fr_1fr_1fr_auto] md:items-center md:gap-3"
               >
                 <div>
                   <p className="text-sm font-medium">{client.name}</p>
@@ -68,9 +67,6 @@ export default async function ClientesPage({
                 </p>
                 <p className="hidden text-sm text-muted md:block">
                   {client.whatsapp || "—"}
-                </p>
-                <p className="hidden text-sm text-muted md:block">
-                  {client.email || "—"}
                 </p>
                 <StatusBadge label="Ver" tone="info" />
               </Link>

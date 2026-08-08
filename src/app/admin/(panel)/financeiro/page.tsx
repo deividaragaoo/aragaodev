@@ -27,15 +27,17 @@ import {
   listClients,
   listPayables,
   listProjects,
+  listReceivableBalances,
   listReceivables,
 } from "@/lib/admin/queries";
 
 export default async function FinanceiroPage() {
-  const [receivables, payables, clients, projects] = await Promise.all([
+  const [receivables, payables, clients, projects, balances] = await Promise.all([
     listReceivables(),
     listPayables(),
     listClients(),
     listProjects(),
+    listReceivableBalances(),
   ]);
 
   const normalize = <T extends { status: string; dueDate: string; amount: number }>(
@@ -57,6 +59,8 @@ export default async function FinanceiroPage() {
       .filter((item) => statuses.includes(item.status))
       .reduce((sum, item) => sum + item.amount, 0);
 
+  const openBalances = balances.filter((item) => item.pending > 0 || item.received > 0);
+
   return (
     <div className="space-y-10">
       <PageHeader
@@ -67,11 +71,115 @@ export default async function FinanceiroPage() {
       <section>
         <h2 className="mb-4 text-lg font-medium">Contas a receber</h2>
         <div className="mb-4 grid gap-3 sm:grid-cols-4">
-          <MiniStat label="Total" value={formatCurrency(sumBy(rec, ["pendente", "atrasado", "pago"]))} />
-          <MiniStat label="Recebido" value={formatCurrency(sumBy(rec, ["pago"]))} />
-          <MiniStat label="Pendente" value={formatCurrency(sumBy(rec, ["pendente"]))} />
-          <MiniStat label="Atrasado" value={formatCurrency(sumBy(rec, ["atrasado"]))} />
+          <MiniStat
+            label="Total"
+            value={formatCurrency(sumBy(rec, ["pendente", "atrasado", "pago"]))}
+          />
+          <MiniStat
+            label="Recebido / Entrada"
+            value={formatCurrency(sumBy(rec, ["pago"]))}
+            tone="success"
+          />
+          <MiniStat
+            label="Pendente"
+            value={formatCurrency(sumBy(rec, ["pendente"]))}
+            tone="warning"
+          />
+          <MiniStat
+            label="Atrasado"
+            value={formatCurrency(sumBy(rec, ["atrasado"]))}
+            tone="danger"
+          />
         </div>
+
+        {openBalances.length > 0 ? (
+          <div className="mb-6 space-y-3">
+            <h3 className="text-sm font-medium text-muted">
+              Progresso por cliente / projeto
+            </h3>
+            {openBalances.map((item) => {
+              const percent =
+                item.total > 0 ? Math.round((item.received / item.total) * 100) : 0;
+              const tone =
+                item.pending <= 0
+                  ? "success"
+                  : item.overdue > 0
+                    ? "danger"
+                    : "warning";
+
+              return (
+                <div
+                  key={item.key}
+                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.projectName}</p>
+                      <p className="text-xs text-muted">{item.clientName}</p>
+                    </div>
+                    <StatusBadge
+                      label={
+                        item.pending <= 0
+                          ? "Quitado"
+                          : item.overdue > 0
+                            ? "Com atraso"
+                            : item.received > 0
+                              ? "Entrada paga · pendente"
+                              : "Aguardando pagamento"
+                      }
+                      tone={tone}
+                    />
+                  </div>
+
+                  <div className="mt-4 grid gap-2 text-sm sm:grid-cols-4">
+                    <p>
+                      <span className="text-muted">Total</span>
+                      <br />
+                      <span className="font-medium">{formatCurrency(item.total)}</span>
+                    </p>
+                    <p>
+                      <span className="text-muted">Entrada / recebido</span>
+                      <br />
+                      <span className="font-medium text-emerald-400">
+                        {formatCurrency(item.received)}
+                      </span>
+                      {item.entrada > 0 ? (
+                        <span className="mt-0.5 block text-[11px] text-muted">
+                          Entrada {formatCurrency(item.entrada)}
+                        </span>
+                      ) : null}
+                    </p>
+                    <p>
+                      <span className="text-muted">Pendente</span>
+                      <br />
+                      <span className="font-medium text-amber-400">
+                        {formatCurrency(item.pending)}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-muted">Progresso</span>
+                      <br />
+                      <span className="font-medium">{percent}%</span>
+                    </p>
+                  </div>
+
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className={`h-full rounded-full ${
+                        item.pending <= 0
+                          ? "bg-emerald-400"
+                          : item.overdue > 0
+                            ? "bg-red-400"
+                            : "bg-[#ff6b35]"
+                      }`}
+                      style={{ width: `${Math.min(percent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
 
         <form
           action={createReceivableAction}
@@ -98,7 +206,11 @@ export default async function FinanceiroPage() {
             </AdminSelect>
           </AdminField>
           <AdminField label="Descrição">
-            <AdminInput name="description" required />
+            <AdminInput
+              name="description"
+              required
+              placeholder="Entrada, parcela 1/2..."
+            />
           </AdminField>
           <AdminField label="Valor">
             <AdminInput name="amount" required />
@@ -116,8 +228,8 @@ export default async function FinanceiroPage() {
               ))}
             </AdminSelect>
           </AdminField>
-          <AdminField label="Parcela">
-            <AdminInput name="installment" placeholder="1/3" />
+          <AdminField label="Parcela / tipo">
+            <AdminInput name="installment" placeholder="Entrada ou 1/3" />
           </AdminField>
           <AdminField label="Status">
             <AdminSelect name="status" defaultValue="pendente">
@@ -137,45 +249,66 @@ export default async function FinanceiroPage() {
           <EmptyState title="Nenhuma conta a receber" />
         ) : (
           <div className="space-y-2">
-            {rec.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-3 rounded-xl border border-white/[0.06] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="text-sm font-medium">{item.description}</p>
-                  <p className="text-xs text-muted">
-                    {item.clientName} · {formatCurrency(item.amount)} ·{" "}
-                    {formatDate(item.dueDate)}
-                    {item.installment ? ` · ${item.installment}` : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge
-                    label={item.status}
-                    tone={
-                      item.status === "pago"
-                        ? "success"
-                        : item.status === "atrasado"
-                          ? "danger"
-                          : "warning"
-                    }
-                  />
-                  {item.status !== "pago" ? (
-                    <form action={markReceivablePaidAction.bind(null, item.id)}>
-                      <AdminButton variant="secondary" type="submit">
-                        Marcar pago
+            {rec.map((item) => {
+              const isEntry =
+                item.installment?.toLowerCase().includes("entrada") ||
+                item.description.toLowerCase().includes("entrada");
+
+              return (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-3 rounded-xl border border-white/[0.06] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium">{item.description}</p>
+                      {isEntry ? (
+                        <StatusBadge label="Entrada" tone="info" />
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-muted">
+                      {item.clientName}
+                      {item.projectName ? ` · ${item.projectName}` : ""} ·{" "}
+                      {formatCurrency(item.amount)} · {formatDate(item.dueDate)}
+                      {item.installment ? ` · ${item.installment}` : ""}
+                    </p>
+                    {item.status === "pago" ? (
+                      <p className="mt-1 text-xs text-emerald-400">
+                        Pago{item.paidAt ? ` em ${formatDate(item.paidAt)}` : ""}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-amber-400">
+                        Valor pendente: {formatCurrency(item.amount)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge
+                      label={item.status}
+                      tone={
+                        item.status === "pago"
+                          ? "success"
+                          : item.status === "atrasado"
+                            ? "danger"
+                            : "warning"
+                      }
+                    />
+                    {item.status !== "pago" ? (
+                      <form action={markReceivablePaidAction.bind(null, item.id)}>
+                        <AdminButton variant="secondary" type="submit">
+                          Marcar pago
+                        </AdminButton>
+                      </form>
+                    ) : null}
+                    <form action={deleteReceivableAction.bind(null, item.id)}>
+                      <AdminButton variant="ghost" type="submit">
+                        Excluir
                       </AdminButton>
                     </form>
-                  ) : null}
-                  <form action={deleteReceivableAction.bind(null, item.id)}>
-                    <AdminButton variant="ghost" type="submit">
-                      Excluir
-                    </AdminButton>
-                  </form>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -183,10 +316,21 @@ export default async function FinanceiroPage() {
       <section>
         <h2 className="mb-4 text-lg font-medium">Contas a pagar</h2>
         <div className="mb-4 grid gap-3 sm:grid-cols-4">
-          <MiniStat label="Total" value={formatCurrency(sumBy(pay, ["pendente", "atrasado", "pago"]))} />
-          <MiniStat label="Pago" value={formatCurrency(sumBy(pay, ["pago"]))} />
-          <MiniStat label="Pendente" value={formatCurrency(sumBy(pay, ["pendente"]))} />
-          <MiniStat label="Atrasado" value={formatCurrency(sumBy(pay, ["atrasado"]))} />
+          <MiniStat
+            label="Total"
+            value={formatCurrency(sumBy(pay, ["pendente", "atrasado", "pago"]))}
+          />
+          <MiniStat label="Pago" value={formatCurrency(sumBy(pay, ["pago"]))} tone="success" />
+          <MiniStat
+            label="Pendente"
+            value={formatCurrency(sumBy(pay, ["pendente"]))}
+            tone="warning"
+          />
+          <MiniStat
+            label="Atrasado"
+            value={formatCurrency(sumBy(pay, ["atrasado"]))}
+            tone="danger"
+          />
         </div>
 
         <form
@@ -284,13 +428,28 @@ export default async function FinanceiroPage() {
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function MiniStat({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "warning" | "danger";
+}) {
+  const tones = {
+    default: "text-foreground",
+    success: "text-emerald-400",
+    warning: "text-amber-400",
+    danger: "text-red-400",
+  };
+
   return (
     <AdminCard>
       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
         {label}
       </p>
-      <p className="mt-2 text-lg font-semibold">{value}</p>
+      <p className={`mt-2 text-lg font-semibold ${tones[tone]}`}>{value}</p>
     </AdminCard>
   );
 }

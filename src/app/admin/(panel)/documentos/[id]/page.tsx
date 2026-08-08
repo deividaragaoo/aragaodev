@@ -74,9 +74,7 @@ export default async function DocumentoDetalhePage({
           <div className="space-y-1 text-sm text-muted">
             <p>{doc.client?.name}</p>
             <p>{doc.client?.company}</p>
-            <p>{doc.client?.document}</p>
             <p>{doc.client?.whatsapp}</p>
-            <p>{doc.client?.email}</p>
             <p>{doc.client?.address}</p>
           </div>
         </AdminCard>

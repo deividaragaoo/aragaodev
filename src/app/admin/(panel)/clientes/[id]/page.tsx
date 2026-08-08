@@ -28,6 +28,9 @@ export default async function ClienteDetalhePage({
   const { client, projects, documents, receivables, pendingTotal } = data;
   const update = updateClientAction.bind(null, client.id);
   const remove = deleteClientAction.bind(null, client.id);
+  const receivedTotal = receivables
+    .filter((item) => item.status === "pago")
+    .reduce((sum, item) => sum + item.amount, 0);
 
   return (
     <div className="space-y-8">
@@ -43,7 +46,7 @@ export default async function ClienteDetalhePage({
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <AdminCard>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
             Projetos
@@ -55,6 +58,14 @@ export default async function ClienteDetalhePage({
             Documentos
           </p>
           <p className="mt-2 text-2xl font-semibold">{documents.length}</p>
+        </AdminCard>
+        <AdminCard>
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+            Entrada / recebido
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-emerald-400">
+            {formatCurrency(receivedTotal)}
+          </p>
         </AdminCard>
         <AdminCard>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
@@ -123,9 +134,16 @@ export default async function ClienteDetalhePage({
           ) : (
             receivables.map((item) => (
               <div key={item.id} className="rounded-xl border border-white/[0.06] px-3 py-2.5">
-                <p className="text-sm font-medium">{item.description}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium">{item.description}</p>
+                  <StatusBadge
+                    label={item.status}
+                    tone={item.status === "pago" ? "success" : "warning"}
+                  />
+                </div>
                 <p className="text-xs text-muted">
-                  {formatCurrency(item.amount)} · {formatDate(item.dueDate)} · {item.status}
+                  {formatCurrency(item.amount)} · {formatDate(item.dueDate)}
+                  {item.installment ? ` · ${item.installment}` : ""}
                 </p>
               </div>
             ))

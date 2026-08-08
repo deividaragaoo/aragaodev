@@ -156,8 +156,6 @@ export async function listClients(search?: string) {
       or(
         like(clients.name, q),
         like(clients.company, q),
-        like(clients.document, q),
-        like(clients.email, q),
         like(clients.whatsapp, q)
       )
     )
@@ -266,6 +264,66 @@ export async function listReceivables() {
     .leftJoin(clients, eq(receivables.clientId, clients.id))
     .leftJoin(projects, eq(receivables.projectId, projects.id))
     .orderBy(desc(receivables.dueDate));
+}
+
+export async function listReceivableBalances() {
+  await ensureAdminReady();
+  const rows = await listReceivables();
+
+  type Balance = {
+    key: string;
+    clientId: number;
+    projectId: number | null;
+    clientName: string;
+    projectName: string;
+    total: number;
+    received: number;
+    pending: number;
+    overdue: number;
+    entrada: number;
+  };
+
+  const map = new Map<string, Balance>();
+
+  for (const row of rows) {
+    const status =
+      row.status === "pendente" && isOverdue(row.dueDate, row.status)
+        ? "atrasado"
+        : row.status;
+    const key = `${row.clientId}:${row.projectId || "avulso"}`;
+    const current = map.get(key) || {
+      key,
+      clientId: row.clientId,
+      projectId: row.projectId,
+      clientName: row.clientName || "Cliente",
+      projectName: row.projectName || "Lançamento avulso",
+      total: 0,
+      received: 0,
+      pending: 0,
+      overdue: 0,
+      entrada: 0,
+    };
+
+    current.total += row.amount;
+    if (status === "pago") {
+      current.received += row.amount;
+      if (
+        row.installment?.toLowerCase().includes("entrada") ||
+        row.description.toLowerCase().includes("entrada")
+      ) {
+        current.entrada += row.amount;
+      }
+    } else if (status === "atrasado") {
+      current.pending += row.amount;
+      current.overdue += row.amount;
+    } else if (status !== "cancelado") {
+      current.pending += row.amount;
+    }
+
+    map.set(key, current);
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.pending - a.pending);
 }
 
 export async function listPayables() {

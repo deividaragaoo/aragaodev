@@ -189,16 +189,37 @@ export async function approveDocumentAsProjectAction(documentId: number) {
     })
     .returning({ id: projects.id });
 
+  const downPayment = doc.downPayment || 0;
+  const now = new Date().toISOString();
+
+  if (downPayment > 0) {
+    await db.insert(receivables).values({
+      clientId: doc.clientId,
+      projectId: project.id,
+      documentId: doc.id,
+      description: `${doc.number} — Entrada`,
+      amount: downPayment,
+      dueDate: todayISO(),
+      paymentMethod: doc.paymentMethod,
+      installment: "Entrada",
+      status: "pago",
+      paidAt: todayISO(),
+      updatedAt: now,
+    });
+  }
+
   const installmentRows =
     doc.installments.length > 0
       ? doc.installments
-      : [
-          {
-            number: 1,
-            dueDate: todayISO(),
-            amount: doc.total,
-          },
-        ];
+      : downPayment < doc.total
+        ? [
+            {
+              number: 1,
+              dueDate: doc.deliveryDeadline || todayISO(),
+              amount: Math.max(doc.total - downPayment, 0),
+            },
+          ]
+        : [];
 
   for (const installment of installmentRows) {
     await db.insert(receivables).values({
@@ -211,7 +232,7 @@ export async function approveDocumentAsProjectAction(documentId: number) {
       paymentMethod: doc.paymentMethod,
       installment: `${installment.number}/${installmentRows.length}`,
       status: "pendente",
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     });
   }
 
