@@ -1,41 +1,85 @@
 "use client";
 
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import {
   AdminButton,
   AdminField,
   AdminInput,
 } from "@/components/admin/ui";
-import {
-  loginWithCredentials,
-  loginWithKeyword,
-  type AuthState,
-} from "@/lib/auth/actions";
 
-const initial: AuthState = { ok: false, step: "credentials" };
+type Step = "credentials" | "keyword";
 
 export function LoginForm() {
-  const [credState, credAction, credPending] = useActionState(
-    loginWithCredentials,
-    initial
-  );
-  const [keyState, keyAction, keyPending] = useActionState(
-    loginWithKeyword,
-    initial
-  );
+  const router = useRouter();
+  const [step, setStep] = useState<Step>("credentials");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  // Advance to keyword after a successful password check.
-  // Only fall back to credentials if the keyword step itself expired.
-  const step: "credentials" | "keyword" =
-    keyState.step === "credentials" && keyState.error
-      ? "credentials"
-      : credState.step === "keyword" || keyState.step === "keyword"
-        ? "keyword"
-        : "credentials";
+  function onCredentials(formData: FormData) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            step: "credentials",
+            username: String(formData.get("username") || "").trim(),
+            password: String(formData.get("password") || ""),
+          }),
+        });
+        const payload = (await response.json()) as {
+          ok: boolean;
+          step?: Step;
+          error?: string;
+        };
 
-  const error =
-    step === "keyword" ? keyState.error || credState.error : credState.error;
+        if (!payload.ok) {
+          setError(payload.error || "Falha ao autenticar.");
+          setStep("credentials");
+          return;
+        }
+
+        setStep("keyword");
+      } catch {
+        setError("Falha de rede ao autenticar.");
+      }
+    });
+  }
+
+  function onKeyword(formData: FormData) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            step: "keyword",
+            keyword: String(formData.get("keyword") || ""),
+          }),
+        });
+        const payload = (await response.json()) as {
+          ok: boolean;
+          step?: string;
+          error?: string;
+        };
+
+        if (!payload.ok) {
+          setError(payload.error || "Falha ao validar palavra-chave.");
+          if (payload.step === "credentials") setStep("credentials");
+          return;
+        }
+
+        router.replace("/admin");
+        router.refresh();
+      } catch {
+        setError("Falha de rede ao validar palavra-chave.");
+      }
+    });
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
@@ -58,7 +102,7 @@ export function LoginForm() {
         </div>
 
         {step === "credentials" ? (
-          <form action={credAction} className="space-y-4">
+          <form action={onCredentials} className="space-y-4">
             <AdminField label="Usuário">
               <AdminInput
                 name="username"
@@ -77,12 +121,12 @@ export function LoginForm() {
               />
             </AdminField>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
-            <AdminButton type="submit" className="w-full" disabled={credPending}>
-              {credPending ? "Validando..." : "Continuar"}
+            <AdminButton type="submit" className="w-full" disabled={pending}>
+              {pending ? "Validando..." : "Continuar"}
             </AdminButton>
           </form>
         ) : (
-          <form action={keyAction} className="space-y-4">
+          <form action={onKeyword} className="space-y-4">
             <AdminField label="Palavra-chave">
               <AdminInput
                 name="keyword"
@@ -94,8 +138,8 @@ export function LoginForm() {
               />
             </AdminField>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
-            <AdminButton type="submit" className="w-full" disabled={keyPending}>
-              {keyPending ? "Entrando..." : "Acessar painel"}
+            <AdminButton type="submit" className="w-full" disabled={pending}>
+              {pending ? "Entrando..." : "Acessar painel"}
             </AdminButton>
           </form>
         )}

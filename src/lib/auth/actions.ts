@@ -68,12 +68,10 @@ export async function loginWithCredentials(
     return { ok: true, step: "keyword" };
   } catch (error) {
     console.error(error);
-    const detail =
-      error instanceof Error ? error.message : "erro desconhecido";
     return {
       ok: false,
       step: "credentials",
-      error: `Falha ao autenticar: ${detail}`,
+      error: "Falha ao autenticar. Verifique a configuração do servidor.",
     };
   }
 }
