@@ -25,8 +25,10 @@ export function LoginForm() {
     initial
   );
 
-  const step =
-    keyState.step === "credentials"
+  // Advance to keyword after a successful password check.
+  // Only fall back to credentials if the keyword step itself expired.
+  const step: "credentials" | "keyword" =
+    keyState.step === "credentials" && keyState.error
       ? "credentials"
       : credState.step === "keyword" || keyState.step === "keyword"
         ? "keyword"
@@ -74,9 +76,7 @@ export function LoginForm() {
                 required
               />
             </AdminField>
-            {error ? (
-              <p className="text-sm text-red-400">{error}</p>
-            ) : null}
+            {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <AdminButton type="submit" className="w-full" disabled={credPending}>
               {credPending ? "Validando..." : "Continuar"}
             </AdminButton>
@@ -93,9 +93,7 @@ export function LoginForm() {
                 autoFocus
               />
             </AdminField>
-            {error ? (
-              <p className="text-sm text-red-400">{error}</p>
-            ) : null}
+            {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <AdminButton type="submit" className="w-full" disabled={keyPending}>
               {keyPending ? "Entrando..." : "Acessar painel"}
             </AdminButton>
