@@ -67,9 +67,7 @@ export const projects = sqliteTable(
     clientId: integer("client_id")
       .notNull()
       .references(() => clients.id, { onDelete: "cascade" }),
-    documentId: integer("document_id").references(() => documents.id, {
-      onDelete: "set null",
-    }),
+    documentId: integer("document_id"),
     name: text("name").notNull(),
     description: text("description"),
     status: text("status", {
