@@ -101,6 +101,10 @@ async function ensureNeonSnapshotTable() {
   `;
 }
 
+function isSqliteFile(buffer: Buffer) {
+  return buffer.length >= 16 && buffer.subarray(0, 15).toString("utf8") === "SQLite format 3";
+}
+
 export async function pullDbFromNeon(localPath: string) {
   if (!hasDurableNeon()) return;
 
@@ -114,6 +118,11 @@ export async function pullDbFromNeon(localPath: string) {
     if (!row?.data) return;
 
     const buffer = Buffer.from(row.data as ArrayBuffer);
+    if (!isSqliteFile(buffer)) {
+      console.error("Ignoring invalid Neon SQLite snapshot");
+      return;
+    }
+
     fs.mkdirSync(path.dirname(localPath), { recursive: true });
     fs.writeFileSync(localPath, buffer);
   } catch (error) {
@@ -126,9 +135,14 @@ export async function pushDbToNeon(localPath: string) {
   if (!fs.existsSync(localPath)) return;
 
   try {
+    const data = fs.readFileSync(localPath);
+    if (!isSqliteFile(data)) {
+      console.error("Refusing to push non-SQLite file to Neon");
+      return;
+    }
+
     await ensureNeonSnapshotTable();
     const sql = await getNeonSql();
-    const data = fs.readFileSync(localPath);
     await sql`
       INSERT INTO admin_db_snapshots (id, data, updated_at)
       VALUES (${SNAPSHOT_KEY}, ${data}, NOW())
