@@ -237,6 +237,29 @@ export function AragaoDocumentPdf({
             <Text style={styles.bodyText}>
               Forma de pagamento: {doc.paymentMethod || "—"}
             </Text>
+            {profile.showRemainingBalance ? (
+              <View style={{ marginTop: 10 }}>
+                <Text style={styles.bodyText}>
+                  {profile.labels.contractTotal}: {money(doc.total)}
+                </Text>
+                <Text style={styles.bodyText}>
+                  {profile.labels.paidAmount}: {money(paidValue)}
+                </Text>
+                <Text
+                  style={{
+                    ...styles.bodyText,
+                    fontFamily: "Helvetica-Bold",
+                    marginTop: 4,
+                  }}
+                >
+                  {profile.labels.remaining}:{" "}
+                  {money(Math.max(0, (doc.total || 0) - paidValue))}
+                  {Math.max(0, (doc.total || 0) - paidValue) <= 0
+                    ? " (quitado)"
+                    : " a ser pago do contrato"}
+                </Text>
+              </View>
+            ) : null}
             {namedItems.length > 0 ? (
               <>
                 <Text style={styles.sectionTitle}>{profile.labels.services}</Text>

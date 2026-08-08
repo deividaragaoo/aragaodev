@@ -415,7 +415,24 @@ export function DocumentForm({
           )}
 
           {profile.showPaidAmount ? (
-            <div className="mb-4 grid gap-3 md:grid-cols-2">
+            <div
+              className={`mb-4 grid gap-3 ${
+                profile.showRemainingBalance
+                  ? "md:grid-cols-2 lg:grid-cols-4"
+                  : "md:grid-cols-2"
+              }`}
+            >
+              {profile.showRemainingBalance ? (
+                <AdminField label={profile.labels.contractTotal}>
+                  <AdminInput
+                    readOnly
+                    value={formatCurrency(totals.total)}
+                  />
+                  <p className="mt-1 text-xs text-muted">
+                    Soma dos itens acima (valor total do contrato/serviço).
+                  </p>
+                </AdminField>
+              ) : null}
               <AdminField label={profile.labels.paidAmount}>
                 <AdminInput
                   name="amountPaid"
@@ -424,6 +441,21 @@ export function DocumentForm({
                   required
                 />
               </AdminField>
+              {profile.showRemainingBalance ? (
+                <AdminField label={profile.labels.remaining}>
+                  <AdminInput
+                    readOnly
+                    value={formatCurrency(
+                      Math.max(0, totals.total - money(amountPaid))
+                    )}
+                  />
+                  <p className="mt-1 text-xs text-muted">
+                    {Math.max(0, totals.total - money(amountPaid)) <= 0
+                      ? "Contrato quitado neste recibo."
+                      : "Ainda falta este valor a ser pago."}
+                  </p>
+                </AdminField>
+              ) : null}
               <AdminField label="Forma de pagamento">
                 <AdminSelect name="paymentMethod" required>
                   <option value="">Selecione</option>
@@ -687,11 +719,33 @@ export function DocumentForm({
               ))}
           </ul>
           {profile.showServicePricing || profile.showPaidAmount ? (
-            <p className="mt-4 font-semibold">
-              {profile.showPaidAmount
-                ? `${profile.labels.paidAmount}: ${formatCurrency(money(amountPaid) || totals.total)}`
-                : `Total: ${formatCurrency(totals.total)}`}
-            </p>
+            <div className="mt-4 space-y-1 font-semibold">
+              {profile.showRemainingBalance ? (
+                <>
+                  <p>
+                    {profile.labels.contractTotal}:{" "}
+                    {formatCurrency(totals.total)}
+                  </p>
+                  <p>
+                    {profile.labels.paidAmount}:{" "}
+                    {formatCurrency(money(amountPaid))}
+                  </p>
+                  <p>
+                    {profile.labels.remaining}:{" "}
+                    {formatCurrency(
+                      Math.max(0, totals.total - money(amountPaid))
+                    )}
+                  </p>
+                </>
+              ) : profile.showPaidAmount ? (
+                <p>
+                  {profile.labels.paidAmount}:{" "}
+                  {formatCurrency(money(amountPaid) || totals.total)}
+                </p>
+              ) : (
+                <p>Total: {formatCurrency(totals.total)}</p>
+              )}
+            </div>
           ) : null}
         </section>
       ) : null}

@@ -14,6 +14,8 @@ export type DocumentTypeProfile = {
   showTrackPayments: boolean;
   /** Valor já recebido (recibo/comprovante) */
   showPaidAmount: boolean;
+  /** Mostra total do contrato, valor pago e restante a pagar (recibo) */
+  showRemainingBalance: boolean;
   showValidUntil: boolean;
   showDeliveryDeadline: boolean;
   showWarranty: boolean;
@@ -29,9 +31,11 @@ export type DocumentTypeProfile = {
     services: string;
     validUntil: string;
     conditions: string;
-    notes: string;
-    paidAmount: string;
-  };
+        notes: string;
+        paidAmount: string;
+        contractTotal: string;
+        remaining: string;
+      };
 };
 
 const COMMERCIAL_BASE = {
@@ -43,6 +47,7 @@ const COMMERCIAL_BASE = {
   showInstallmentPlan: true,
   showTrackPayments: true,
   showPaidAmount: false,
+  showRemainingBalance: false,
   showValidUntil: true,
   showDeliveryDeadline: true,
   showWarranty: true,
@@ -69,6 +74,8 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
         conditions: "Condições do orçamento",
         notes: "Observações",
         paidAmount: "Valor já pago",
+        contractTotal: "Valor total",
+        remaining: "Restante a pagar",
       },
     },
     proposta: {
@@ -81,6 +88,8 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
         conditions: "Condições comerciais",
         notes: "Apresentação / observações",
         paidAmount: "Valor já pago",
+        contractTotal: "Valor total",
+        remaining: "Restante a pagar",
       },
     },
     contrato: {
@@ -98,11 +107,13 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
         conditions: "Cláusulas e condições",
         notes: "Observações",
         paidAmount: "Valor já pago",
+        contractTotal: "Valor total",
+        remaining: "Restante a pagar",
       },
     },
     recibo: {
       description:
-        "Comprova recebimento de valor: cliente, valor, forma, referência e sua assinatura.",
+        "Comprova quanto foi pago agora e quanto ainda resta do contrato.",
       showServices: true,
       showServicePricing: true,
       showServiceDescription: false,
@@ -111,6 +122,7 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
       showInstallmentPlan: false,
       showTrackPayments: false,
       showPaidAmount: true,
+      showRemainingBalance: true,
       showValidUntil: false,
       showDeliveryDeadline: false,
       showWarranty: false,
@@ -122,11 +134,13 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
       canConvertToProject: false,
       printItemDescriptions: false,
       labels: {
-        services: "Referente a",
+        services: "Referente ao contrato / serviço",
         validUntil: "Validade",
         conditions: "Condições",
         notes: "Observações / detalhe do recebimento",
-        paidAmount: "Valor recebido",
+        paidAmount: "Valor pago neste recibo",
+        contractTotal: "Valor total do contrato",
+        remaining: "Restante a pagar",
       },
     },
     termo: {
@@ -140,6 +154,7 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
       showInstallmentPlan: false,
       showTrackPayments: false,
       showPaidAmount: false,
+      showRemainingBalance: false,
       showValidUntil: false,
       showDeliveryDeadline: false,
       showWarranty: false,
@@ -156,6 +171,8 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
         conditions: "Texto do termo",
         notes: "Observações",
         paidAmount: "Valor",
+        contractTotal: "Valor total",
+        remaining: "Restante a pagar",
       },
     },
     comprovante: {
@@ -169,6 +186,7 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
       showInstallmentPlan: false,
       showTrackPayments: false,
       showPaidAmount: true,
+      showRemainingBalance: false,
       showValidUntil: false,
       showDeliveryDeadline: false,
       showWarranty: false,
@@ -185,6 +203,8 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
         conditions: "Condições",
         notes: "Identificação / observações (PIX, ID, etc.)",
         paidAmount: "Valor pago",
+        contractTotal: "Valor total",
+        remaining: "Restante a pagar",
       },
     },
   };

@@ -159,8 +159,13 @@ export async function createDocumentAction(formData: FormData) {
   );
 
   const paidRaw = parseMoney(String(formData.get("amountPaid") || "0"));
-  if (profile.showPaidAmount && paidRaw > 0 && total <= 0) {
-    // Recibo/comprovante podem ter valor recebido maior que a soma dos itens.
+  if (
+    profile.showPaidAmount &&
+    !profile.showRemainingBalance &&
+    paidRaw > 0 &&
+    total <= 0
+  ) {
+    // Comprovante sem preço nos itens: usa o valor pago como total.
     total = paidRaw;
     if (items.length === 1 && items[0].unitPrice === 0) {
       items = [
@@ -173,11 +178,23 @@ export async function createDocumentAction(formData: FormData) {
     }
   }
 
-  const amountPaid = profile.showPaidAmount
-    ? Math.max(paidRaw, total > 0 ? total : paidRaw)
-    : profile.showTrackPayments && formData.get("trackPayments") === "1"
-      ? Math.min(total, paidRaw)
-      : 0;
+  if (profile.showRemainingBalance && total <= 0) {
+    throw new Error(
+      "Informe o valor total do contrato nos itens e o valor pago neste recibo."
+    );
+  }
+
+  if (profile.showRemainingBalance && paidRaw <= 0) {
+    throw new Error("Informe o valor pago neste recibo.");
+  }
+
+  const amountPaid = profile.showRemainingBalance
+    ? Math.min(Math.max(paidRaw, 0), total || paidRaw)
+    : profile.showPaidAmount
+      ? Math.max(paidRaw, total > 0 ? total : paidRaw)
+      : profile.showTrackPayments && formData.get("trackPayments") === "1"
+        ? Math.min(total, paidRaw)
+        : 0;
 
   const trackPayments =
     profile.showPaidAmount ||

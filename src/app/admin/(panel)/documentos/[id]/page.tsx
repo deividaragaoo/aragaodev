@@ -118,7 +118,24 @@ export default async function DocumentoDetalhePage({
             {profile.showPaymentTerms || profile.showPaidAmount ? (
               <p>Pagamento: {doc.paymentMethod || "—"}</p>
             ) : null}
-            {profile.showPaidAmount ? (
+            {profile.showRemainingBalance ? (
+              <>
+                <p>
+                  {profile.labels.contractTotal}:{" "}
+                  {formatCurrency(doc.total || 0)}
+                </p>
+                <p>
+                  {profile.labels.paidAmount}:{" "}
+                  {formatCurrency(doc.amountPaid || 0)}
+                </p>
+                <p>
+                  {profile.labels.remaining}:{" "}
+                  {formatCurrency(
+                    Math.max(0, (doc.total || 0) - (doc.amountPaid || 0))
+                  )}
+                </p>
+              </>
+            ) : profile.showPaidAmount ? (
               <p>
                 {profile.labels.paidAmount}:{" "}
                 {formatCurrency(doc.amountPaid || doc.total || 0)}
