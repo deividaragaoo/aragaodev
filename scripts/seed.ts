@@ -1,5 +1,11 @@
 import { ensureAdminReady } from "../src/lib/db/ensure";
 
-await ensureAdminReady();
+async function main() {
+  await ensureAdminReady();
+  console.log("Admin database migrated and seeded.");
+}
 
-console.log("Admin database migrated and seeded.");
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
