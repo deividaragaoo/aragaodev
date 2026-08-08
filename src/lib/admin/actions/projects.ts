@@ -9,7 +9,7 @@ import { parseMoney } from "@/lib/admin/format";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
-import { ensureAdminReady } from "@/lib/db/ensure";
+import { ensureAdminReady, persistAdminDb } from "@/lib/db/ensure";
 
 const projectSchema = z.object({
   clientId: z.coerce.number().int().positive(),
@@ -19,8 +19,14 @@ const projectSchema = z.object({
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
   status: z.string().min(1),
+  progress: z.coerce.number().min(0).max(100),
   notes: z.string().optional(),
 });
+
+function clampProgress(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
 
 function formValues(formData: FormData) {
   return {
@@ -31,6 +37,7 @@ function formValues(formData: FormData) {
     startDate: String(formData.get("startDate") || "").trim() || undefined,
     dueDate: String(formData.get("dueDate") || "").trim() || undefined,
     status: String(formData.get("status") || "orcamento"),
+    progress: clampProgress(Number(formData.get("progress") || 0)),
     notes: String(formData.get("notes") || "").trim() || undefined,
   };
 }
@@ -55,7 +62,9 @@ export async function createProjectAction(formData: FormData) {
     details: parsed.name,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/projetos");
+  revalidatePath("/admin/clientes");
   revalidatePath("/admin");
   redirect("/admin/projetos");
 }
@@ -77,9 +86,52 @@ export async function updateProjectAction(id: number, formData: FormData) {
     details: parsed.name,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/projetos");
+  revalidatePath(`/admin/projetos/${id}`);
+  revalidatePath("/admin/clientes");
   revalidatePath("/admin");
   redirect("/admin/projetos");
+}
+
+export async function updateProjectProgressAction(
+  id: number,
+  progress: number
+) {
+  await requireSession();
+  await ensureAdminReady();
+
+  const value = clampProgress(progress);
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  });
+
+  await db
+    .update(projects)
+    .set({
+      progress: value,
+      status:
+        value >= 100
+          ? "concluido"
+          : project?.status === "concluido"
+            ? "em_desenvolvimento"
+            : project?.status || "em_desenvolvimento",
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(projects.id, id));
+
+  await logActivity({
+    action: "Andamento do projeto atualizado",
+    entityType: "project",
+    entityId: id,
+    details: `${project?.name || `#${id}`} → ${value}%`,
+  });
+
+  await persistAdminDb();
+  revalidatePath("/admin/projetos");
+  revalidatePath(`/admin/projetos/${id}`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/clientes");
 }
 
 export async function deleteProjectAction(id: number) {
@@ -99,7 +151,9 @@ export async function deleteProjectAction(id: number) {
     details: project?.name,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/projetos");
+  revalidatePath("/admin/clientes");
   revalidatePath("/admin");
   redirect("/admin/projetos");
 }

@@ -8,6 +8,7 @@ import {
   StatusBadge,
 } from "@/components/admin/ui";
 import { ClientForm } from "@/components/admin/ClientForm";
+import { ProjectProgress } from "@/components/admin/ProjectProgress";
 import {
   deleteClientAction,
   updateClientAction,
@@ -102,6 +103,9 @@ export default async function ClienteDetalhePage({
                       project.status
                     }
                   />
+                </div>
+                <div className="mt-3">
+                  <ProjectProgress progress={project.progress || 0} />
                 </div>
               </div>
             ))

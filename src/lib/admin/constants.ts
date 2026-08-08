@@ -1,12 +1,20 @@
 export const PROJECT_STATUSES = [
-  { value: "orcamento", label: "Orçamento" },
-  { value: "aguardando_aprovacao", label: "Aguardando aprovação" },
-  { value: "aprovado", label: "Aprovado" },
-  { value: "em_desenvolvimento", label: "Em desenvolvimento" },
-  { value: "em_revisao", label: "Em revisão" },
-  { value: "concluido", label: "Concluído" },
-  { value: "cancelado", label: "Cancelado" },
+  { value: "orcamento", label: "Orçamento", progress: 0 },
+  { value: "aguardando_aprovacao", label: "Aguardando aprovação", progress: 5 },
+  { value: "aprovado", label: "Aprovado", progress: 10 },
+  { value: "em_desenvolvimento", label: "Em desenvolvimento", progress: 50 },
+  { value: "em_revisao", label: "Em revisão", progress: 85 },
+  { value: "concluido", label: "Concluído", progress: 100 },
+  { value: "cancelado", label: "Cancelado", progress: 0 },
 ] as const;
+
+export const PROJECT_PROGRESS_PRESETS = [0, 10, 25, 50, 75, 90, 100] as const;
+
+export function progressForStatus(status: string) {
+  return (
+    PROJECT_STATUSES.find((item) => item.value === status)?.progress ?? 0
+  );
+}
 
 export const RECEIVABLE_STATUSES = [
   { value: "pendente", label: "Pendente" },

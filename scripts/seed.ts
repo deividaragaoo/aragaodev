@@ -69,6 +69,7 @@ async function main() {
       start_date TEXT,
       due_date TEXT,
       status TEXT NOT NULL DEFAULT 'orcamento',
+      progress INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
       document_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),

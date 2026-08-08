@@ -8,16 +8,9 @@ import {
   AdminSelect,
   AdminTextarea,
 } from "@/components/admin/ui";
+import { ClientSelect, type ClientOption } from "@/components/admin/ClientSelect";
 import { DOCUMENT_TYPES, PAYMENT_METHODS } from "@/lib/admin/constants";
 import { formatCurrency } from "@/lib/admin/format";
-
-type Client = {
-  id: number;
-  name: string;
-  company?: string | null;
-  whatsapp?: string | null;
-  address?: string | null;
-};
 
 type Item = {
   name: string;
@@ -42,11 +35,12 @@ export function DocumentForm({
   clients,
   action,
 }: {
-  clients: Client[];
+  clients: ClientOption[];
   action: (formData: FormData) => Promise<void>;
 }) {
   const [type, setType] = useState("orcamento");
   const [clientId, setClientId] = useState("");
+  const [selectedClient, setSelectedClient] = useState<ClientOption | undefined>();
   const [items, setItems] = useState<Item[]>([
     { name: "", description: "", quantity: "1", unitPrice: "", discount: "0" },
   ]);
@@ -56,8 +50,6 @@ export function DocumentForm({
     { dueDate: "", amount: "" },
   ]);
   const [preview, setPreview] = useState(false);
-
-  const selectedClient = clients.find((c) => String(c.id) === clientId);
 
   const totals = useMemo(() => {
     const lines = items.map((item) => {
@@ -108,22 +100,14 @@ export function DocumentForm({
 
       <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-6">
         <h2 className="mb-4 text-lg font-medium">Cliente</h2>
-        <AdminField label="Selecionar cliente">
-          <AdminSelect
-            name="clientId"
-            required
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-          >
-            <option value="">Selecione</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-                {client.company ? ` — ${client.company}` : ""}
-              </option>
-            ))}
-          </AdminSelect>
-        </AdminField>
+        <ClientSelect
+          initialClients={clients}
+          defaultValue={clientId}
+          onChange={(nextId, client) => {
+            setClientId(nextId);
+            setSelectedClient(client);
+          }}
+        />
         {selectedClient ? (
           <div className="mt-4 grid gap-2 rounded-xl border border-white/[0.06] bg-black/20 p-4 text-sm text-muted sm:grid-cols-2">
             <p>Nome: {selectedClient.name}</p>

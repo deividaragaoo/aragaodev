@@ -16,7 +16,7 @@ import {
   projects,
   receivables,
 } from "@/lib/db/schema";
-import { ensureAdminReady } from "@/lib/db/ensure";
+import { ensureAdminReady, persistAdminDb } from "@/lib/db/ensure";
 
 async function nextDocumentNumber(type: string) {
   const year = new Date().getFullYear();
@@ -153,6 +153,7 @@ export async function createDocumentAction(formData: FormData) {
     details: number,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/documentos");
   revalidatePath("/admin");
   redirect(`/admin/documentos/${doc.id}`);
@@ -183,6 +184,7 @@ export async function approveDocumentAsProjectAction(documentId: number) {
       startDate: todayISO(),
       dueDate: doc.deliveryDeadline,
       status: "aprovado",
+      progress: 10,
       documentId: doc.id,
       notes: doc.notes,
       updatedAt: new Date().toISOString(),
@@ -252,6 +254,7 @@ export async function approveDocumentAsProjectAction(documentId: number) {
     details: `${doc.number} → projeto #${project.id}`,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/documentos");
   revalidatePath("/admin/projetos");
   revalidatePath("/admin/financeiro");
@@ -280,6 +283,7 @@ export async function deleteDocumentAction(id: number) {
     details: doc?.number,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/documentos");
   redirect("/admin/documentos");
 }

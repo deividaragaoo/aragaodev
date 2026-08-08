@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { hashSecret } from "@/lib/auth/password";
-import { db, dbClient } from "@/lib/db";
+import { db, dbClient, getLocalDbPath } from "@/lib/db";
+import { hasDurableBlob, pullDbFromBlob, pushDbToBlob } from "@/lib/db/persist";
 import { adminUsers, companySettings } from "@/lib/db/schema";
 
 let readyPromise: Promise<void> | null = null;
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS projects (
   start_date TEXT,
   due_date TEXT,
   status TEXT NOT NULL DEFAULT 'orcamento',
+  progress INTEGER NOT NULL DEFAULT 0,
   notes TEXT,
   document_id INTEGER,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -184,33 +186,54 @@ async function tableHasColumn(table: string, column: string) {
   });
 }
 
-async function schemaIsCompatible() {
-  return (
-    (await tableHasColumn("company_settings", "name")) &&
-    (await tableHasColumn("admin_users", "password_hash")) &&
-    (await tableHasColumn("clients", "whatsapp")) &&
-    (await tableHasColumn("projects", "value")) &&
-    (await tableHasColumn("receivables", "amount"))
+async function needsSchemaReset() {
+  if (!(await tableExists("company_settings"))) return false;
+  // Only wipe when we detect the incompatible preview schema.
+  if (await tableHasColumn("company_settings", "company_name")) return true;
+  if (!(await tableHasColumn("company_settings", "name"))) return true;
+  return false;
+}
+
+async function ensureProjectProgressColumn() {
+  if (!(await tableExists("projects"))) return;
+  if (await tableHasColumn("projects", "progress")) return;
+  await dbClient.execute(
+    `ALTER TABLE projects ADD COLUMN progress INTEGER NOT NULL DEFAULT 0`
   );
+}
+
+export async function persistAdminDb() {
+  if (process.env.TURSO_DATABASE_URL) return;
+  await pushDbToBlob(getLocalDbPath());
 }
 
 export async function ensureAdminReady() {
   if (!readyPromise) {
     readyPromise = (async () => {
-      if (!process.env.TURSO_DATABASE_URL && !process.env.VERCEL) {
-        const dataDir = path.join(process.cwd(), "data");
-        if (!fs.existsSync(dataDir)) {
-          fs.mkdirSync(dataDir, { recursive: true });
+      if (!process.env.TURSO_DATABASE_URL) {
+        const localPath = getLocalDbPath();
+        if (!process.env.VERCEL) {
+          const dataDir = path.join(process.cwd(), "data");
+          if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+          }
+        }
+
+        // Restore durable SQLite snapshot on cold starts (Vercel /tmp is ephemeral).
+        if (hasDurableBlob() && !fs.existsSync(localPath)) {
+          await pullDbFromBlob(localPath);
+        } else if (hasDurableBlob()) {
+          // Prefer remote snapshot when available so every instance shares state.
+          await pullDbFromBlob(localPath);
         }
       }
 
-      const compatible = await schemaIsCompatible();
-      if (!compatible && (await tableExists("company_settings"))) {
-        // Preview/old schema (company_name, amount_cents, etc.) cannot be altered in place.
+      if (await needsSchemaReset()) {
         await dbClient.executeMultiple(RESET_SQL);
       }
 
       await dbClient.executeMultiple(CREATE_SQL);
+      await ensureProjectProgressColumn();
 
       const username = (
         process.env.ADMIN_USERNAME || "deividaragaoo"
@@ -260,6 +283,8 @@ export async function ensureAdminReady() {
           logoPath: "/brand/aragaodev-logo.png",
         });
       }
+
+      await persistAdminDb();
     })().catch((error) => {
       readyPromise = null;
       throw error;

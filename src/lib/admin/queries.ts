@@ -211,6 +211,7 @@ export async function listProjects() {
       startDate: projects.startDate,
       dueDate: projects.dueDate,
       status: projects.status,
+      progress: projects.progress,
       notes: projects.notes,
       clientId: projects.clientId,
       clientName: clients.name,

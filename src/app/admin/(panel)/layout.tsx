@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getSession } from "@/lib/auth/session";
 import { ensureAdminReady } from "@/lib/db/ensure";
+import { hasDurableDb } from "@/lib/db/persist";
 
 export const dynamic = "force-dynamic";
 
@@ -23,5 +24,12 @@ export default async function AdminLayout({
     redirect("/admin/login");
   }
 
-  return <AdminShell username={session.username}>{children}</AdminShell>;
+  return (
+    <AdminShell
+      username={session.username}
+      storageWarning={Boolean(process.env.VERCEL) && !hasDurableDb()}
+    >
+      {children}
+    </AdminShell>
+  );
 }

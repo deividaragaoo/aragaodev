@@ -9,7 +9,7 @@ import { parseMoney, todayISO } from "@/lib/admin/format";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { payables, receivables } from "@/lib/db/schema";
-import { ensureAdminReady } from "@/lib/db/ensure";
+import { ensureAdminReady, persistAdminDb } from "@/lib/db/ensure";
 
 const receivableSchema = z.object({
   clientId: z.coerce.number().int().positive(),
@@ -64,6 +64,7 @@ export async function createReceivableAction(formData: FormData) {
     details: parsed.description,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
   redirect("/admin/financeiro");
@@ -88,6 +89,7 @@ export async function markReceivablePaidAction(id: number) {
     entityId: id,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
 }
@@ -101,6 +103,7 @@ export async function deleteReceivableAction(id: number) {
     entityType: "receivable",
     entityId: id,
   });
+  await persistAdminDb();
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
 }
@@ -135,6 +138,7 @@ export async function createPayableAction(formData: FormData) {
     details: parsed.description,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
   redirect("/admin/financeiro");
@@ -159,6 +163,7 @@ export async function markPayablePaidAction(id: number) {
     entityId: id,
   });
 
+  await persistAdminDb();
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
 }
@@ -172,6 +177,7 @@ export async function deletePayableAction(id: number) {
     entityType: "payable",
     entityId: id,
   });
+  await persistAdminDb();
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
 }

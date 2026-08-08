@@ -5,12 +5,7 @@ import os from "os";
 import path from "path";
 import * as schema from "./schema";
 
-function resolveDbUrl() {
-  if (process.env.TURSO_DATABASE_URL) {
-    return process.env.TURSO_DATABASE_URL;
-  }
-
-  // On Vercel the app filesystem is read-only; keep the local SQLite file in /tmp.
+export function getLocalDbPath() {
   const baseDir = process.env.VERCEL
     ? path.join(os.tmpdir(), "aragaodev-admin")
     : path.join(process.cwd(), "data");
@@ -19,7 +14,15 @@ function resolveDbUrl() {
     fs.mkdirSync(baseDir, { recursive: true });
   }
 
-  return `file:${path.join(baseDir, "admin.db")}`;
+  return path.join(baseDir, "admin.db");
+}
+
+function resolveDbUrl() {
+  if (process.env.TURSO_DATABASE_URL) {
+    return process.env.TURSO_DATABASE_URL;
+  }
+
+  return `file:${getLocalDbPath()}`;
 }
 
 const client = createClient({

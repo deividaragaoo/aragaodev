@@ -1,14 +1,14 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logActivity } from "@/lib/admin/activity";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { persistAdminDb, ensureAdminReady } from "@/lib/db/ensure";
 import { clients } from "@/lib/db/schema";
-import { ensureAdminReady } from "@/lib/db/ensure";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -28,32 +28,50 @@ function formValues(formData: FormData) {
   };
 }
 
+function revalidateClientPaths(id?: number) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/clientes");
+  revalidatePath("/admin/projetos");
+  revalidatePath("/admin/documentos");
+  revalidatePath("/admin/documentos/novo");
+  revalidatePath("/admin/financeiro");
+  if (id) revalidatePath(`/admin/clientes/${id}`);
+}
+
 export async function createClientAction(formData: FormData) {
   await requireSession();
   await ensureAdminReady();
   const parsed = clientSchema.parse(formValues(formData));
 
-  const [row] = await db
-    .insert(clients)
-    .values({
-      ...parsed,
-      document: null,
-      phone: null,
-      email: null,
-      updatedAt: new Date().toISOString(),
-    })
-    .returning({ id: clients.id });
+  await db.insert(clients).values({
+    ...parsed,
+    document: null,
+    phone: null,
+    email: null,
+    updatedAt: new Date().toISOString(),
+  });
+
+  const [created] = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.name, parsed.name))
+    .orderBy(desc(clients.id))
+    .limit(1);
+
+  if (!created) {
+    throw new Error("Não foi possível salvar o cliente.");
+  }
 
   await logActivity({
     action: "Cliente criado",
     entityType: "client",
-    entityId: row.id,
+    entityId: created.id,
     details: parsed.name,
   });
 
-  revalidatePath("/admin/clientes");
-  revalidatePath("/admin");
-  redirect(`/admin/clientes/${row.id}`);
+  await persistAdminDb();
+  revalidateClientPaths(created.id);
+  redirect(`/admin/projetos?clientId=${created.id}`);
 }
 
 export async function updateClientAction(id: number, formData: FormData) {
@@ -79,8 +97,8 @@ export async function updateClientAction(id: number, formData: FormData) {
     details: parsed.name,
   });
 
-  revalidatePath("/admin/clientes");
-  revalidatePath(`/admin/clientes/${id}`);
+  await persistAdminDb();
+  revalidateClientPaths(id);
   redirect(`/admin/clientes/${id}`);
 }
 
@@ -101,7 +119,7 @@ export async function deleteClientAction(id: number) {
     details: client?.name,
   });
 
-  revalidatePath("/admin/clientes");
-  revalidatePath("/admin");
+  await persistAdminDb();
+  revalidateClientPaths();
   redirect("/admin/clientes");
 }

@@ -6,6 +6,7 @@ import {
   StatusBadge,
 } from "@/components/admin/ui";
 import { ProjectForm } from "@/components/admin/ProjectForm";
+import { ProjectProgress } from "@/components/admin/ProjectProgress";
 import { PROJECT_STATUSES } from "@/lib/admin/constants";
 import { formatCurrency, formatDate } from "@/lib/admin/format";
 import {
@@ -15,7 +16,12 @@ import {
 } from "@/lib/admin/queries";
 import { createProjectAction } from "@/lib/admin/actions/projects";
 
-export default async function ProjetosPage() {
+export default async function ProjetosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ clientId?: string }>;
+}) {
+  const { clientId } = await searchParams;
   const [rows, clients] = await Promise.all([listProjects(), listClients()]);
   const finances = await Promise.all(
     rows.map(async (project) => ({
@@ -24,6 +30,7 @@ export default async function ProjetosPage() {
     }))
   );
   const financeMap = Object.fromEntries(finances.map((f) => [f.id, f]));
+  const preselectedClientId = clientId ? Number(clientId) : undefined;
 
   return (
     <div className="space-y-8">
@@ -34,7 +41,13 @@ export default async function ProjetosPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-medium">Novo projeto</h2>
-        <ProjectForm action={createProjectAction} clients={clients} />
+        <ProjectForm
+          action={createProjectAction}
+          clients={clients}
+          preselectedClientId={
+            Number.isFinite(preselectedClientId) ? preselectedClientId : undefined
+          }
+        />
       </section>
 
       <section>
@@ -55,7 +68,9 @@ export default async function ProjetosPage() {
                       <p className="text-base font-medium">{project.name}</p>
                       <p className="mt-1 text-sm text-muted">
                         {project.clientName}
-                        {project.clientCompany ? ` · ${project.clientCompany}` : ""}
+                        {project.clientCompany
+                          ? ` · ${project.clientCompany}`
+                          : ""}
                       </p>
                     </div>
                     <StatusBadge
@@ -72,6 +87,15 @@ export default async function ProjetosPage() {
                       }
                     />
                   </div>
+
+                  <div className="mt-4">
+                    <ProjectProgress
+                      projectId={project.id}
+                      progress={project.progress || 0}
+                      editable
+                    />
+                  </div>
+
                   <div className="mt-4 grid gap-2 text-sm text-muted sm:grid-cols-4">
                     <p>Total: {formatCurrency(project.value)}</p>
                     <p>Recebido: {formatCurrency(finance?.received || 0)}</p>

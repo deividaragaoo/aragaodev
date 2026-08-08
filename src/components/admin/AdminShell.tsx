@@ -33,9 +33,11 @@ const icons = {
 export function AdminShell({
   children,
   username,
+  storageWarning = false,
 }: {
   children: React.ReactNode;
   username: string;
+  storageWarning?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -138,7 +140,16 @@ export function AdminShell({
             <div className="w-9" />
           </header>
 
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            {storageWarning ? (
+              <div className="mb-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                Para os clientes e projetos não sumirem na Vercel, configure
+                persistência: `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` ou
+                `BLOB_READ_WRITE_TOKEN` (Vercel Blob).
+              </div>
+            ) : null}
+            {children}
+          </main>
         </div>
       </div>
     </div>

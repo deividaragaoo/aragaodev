@@ -60,6 +60,7 @@ export const projects = sqliteTable("projects", {
   startDate: text("start_date"),
   dueDate: text("due_date"),
   status: text("status").notNull().default("orcamento"),
+  progress: integer("progress").notNull().default(0),
   notes: text("notes"),
   documentId: integer("document_id"),
   createdAt: text("created_at")
