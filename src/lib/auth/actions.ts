@@ -40,17 +40,19 @@ export async function loginWithCredentials(
     await ensureAdminReady();
 
     const parsed = credentialsSchema.safeParse({
-      username: formData.get("username"),
-      password: formData.get("password"),
+      username: String(formData.get("username") || "").trim(),
+      password: String(formData.get("password") || ""),
     });
 
     if (!parsed.success) {
       return { ok: false, step: "credentials", error: "Preencha usuário e senha." };
     }
 
-    const user = await db.query.adminUsers.findFirst({
-      where: eq(adminUsers.username, parsed.data.username),
-    });
+    const users = await db.select().from(adminUsers);
+    const user = users.find(
+      (row) =>
+        row.username.toLowerCase() === parsed.data.username.toLowerCase()
+    );
 
     if (!user || !(await verifySecret(parsed.data.password, user.passwordHash))) {
       return { ok: false, step: "credentials", error: "Usuário ou senha inválidos." };

@@ -4,6 +4,8 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getSession } from "@/lib/auth/session";
 import { ensureAdminReady } from "@/lib/db/ensure";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin",
   robots: { index: false, follow: false },

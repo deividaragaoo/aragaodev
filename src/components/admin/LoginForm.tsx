@@ -61,7 +61,7 @@ export function LoginForm() {
               <AdminInput
                 name="username"
                 autoComplete="username"
-                placeholder="admin"
+                placeholder="deividaragaoo"
                 required
               />
             </AdminField>

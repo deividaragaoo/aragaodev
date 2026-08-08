@@ -165,8 +165,8 @@ async function main() {
     );
   `);
 
-  const username = process.env.ADMIN_USERNAME || "admin";
-  const password = process.env.ADMIN_PASSWORD || "aragaoadmin2026";
+  const username = process.env.ADMIN_USERNAME || "deividaragaoo";
+  const password = process.env.ADMIN_PASSWORD || "Aragao212054@";
   const keyword = process.env.ADMIN_KEYWORD || "deividgostoso";
 
   const existing = await db.query.adminUsers.findFirst({

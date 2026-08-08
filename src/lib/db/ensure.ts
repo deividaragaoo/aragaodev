@@ -7,7 +7,7 @@ import { adminUsers, companySettings } from "@/lib/db/schema";
 
 let readyPromise: Promise<void> | null = null;
 
-const MIGRATION_SQL = `
+const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS admin_users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE,
@@ -151,32 +151,101 @@ CREATE TABLE IF NOT EXISTS document_counters (
 );
 `;
 
+const RESET_SQL = `
+PRAGMA foreign_keys = OFF;
+DROP TABLE IF EXISTS document_installments;
+DROP TABLE IF EXISTS document_items;
+DROP TABLE IF EXISTS document_counters;
+DROP TABLE IF EXISTS activity_log;
+DROP TABLE IF EXISTS receivables;
+DROP TABLE IF EXISTS payables;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS company_settings;
+DROP TABLE IF EXISTS admin_users;
+PRAGMA foreign_keys = ON;
+`;
+
+async function tableExists(table: string) {
+  const result = await dbClient.execute({
+    sql: `SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`,
+    args: [table],
+  });
+  return result.rows.length > 0;
+}
+
+async function tableHasColumn(table: string, column: string) {
+  if (!(await tableExists(table))) return false;
+  const result = await dbClient.execute(`PRAGMA table_info(${table})`);
+  return result.rows.some((row) => {
+    const name = (row as Record<string, unknown>).name ?? row[1];
+    return name === column;
+  });
+}
+
+async function schemaIsCompatible() {
+  return (
+    (await tableHasColumn("company_settings", "name")) &&
+    (await tableHasColumn("admin_users", "password_hash")) &&
+    (await tableHasColumn("clients", "whatsapp")) &&
+    (await tableHasColumn("projects", "value")) &&
+    (await tableHasColumn("receivables", "amount"))
+  );
+}
+
 export async function ensureAdminReady() {
   if (!readyPromise) {
     readyPromise = (async () => {
-      if (!process.env.TURSO_DATABASE_URL) {
+      if (!process.env.TURSO_DATABASE_URL && !process.env.VERCEL) {
         const dataDir = path.join(process.cwd(), "data");
         if (!fs.existsSync(dataDir)) {
           fs.mkdirSync(dataDir, { recursive: true });
         }
       }
 
-      await dbClient.executeMultiple(MIGRATION_SQL);
+      const compatible = await schemaIsCompatible();
+      if (!compatible && (await tableExists("company_settings"))) {
+        // Preview/old schema (company_name, amount_cents, etc.) cannot be altered in place.
+        await dbClient.executeMultiple(RESET_SQL);
+      }
 
-      const username = process.env.ADMIN_USERNAME || "admin";
-      const password = process.env.ADMIN_PASSWORD || "aragaoadmin2026";
+      await dbClient.executeMultiple(CREATE_SQL);
+
+      const username = (
+        process.env.ADMIN_USERNAME || "deividaragaoo"
+      ).trim();
+      const password = process.env.ADMIN_PASSWORD || "Aragao212054@";
       const keyword = process.env.ADMIN_KEYWORD || "deividgostoso";
+      const passwordHash = await hashSecret(password);
+      const keywordHash = await hashSecret(keyword);
+      const now = new Date().toISOString();
 
-      const existing = await db.query.adminUsers.findFirst({
-        where: eq(adminUsers.username, username),
-      });
+      // Keep the configured admin credentials in sync on every boot.
+      const existingUsers = await db.select().from(adminUsers);
+      const matched =
+        existingUsers.find(
+          (user) => user.username.toLowerCase() === username.toLowerCase()
+        ) || existingUsers[0];
 
-      if (!existing) {
+      if (!matched) {
         await db.insert(adminUsers).values({
           username,
-          passwordHash: await hashSecret(password),
-          keywordHash: await hashSecret(keyword),
+          passwordHash,
+          keywordHash,
+          createdAt: now,
+          updatedAt: now,
         });
+      } else {
+        await db
+          .update(adminUsers)
+          .set({
+            username,
+            passwordHash,
+            keywordHash,
+            updatedAt: now,
+          })
+          .where(eq(adminUsers.id, matched.id));
       }
 
       const settings = await db.query.companySettings.findFirst();

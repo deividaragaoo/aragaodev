@@ -1,5 +1,7 @@
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
+import fs from "fs";
+import os from "os";
 import path from "path";
 import * as schema from "./schema";
 
@@ -8,8 +10,16 @@ function resolveDbUrl() {
     return process.env.TURSO_DATABASE_URL;
   }
 
-  const filePath = path.join(process.cwd(), "data", "admin.db");
-  return `file:${filePath}`;
+  // On Vercel the app filesystem is read-only; keep the local SQLite file in /tmp.
+  const baseDir = process.env.VERCEL
+    ? path.join(os.tmpdir(), "aragaodev-admin")
+    : path.join(process.cwd(), "data");
+
+  if (!fs.existsSync(baseDir)) {
+    fs.mkdirSync(baseDir, { recursive: true });
+  }
+
+  return `file:${path.join(baseDir, "admin.db")}`;
 }
 
 const client = createClient({
