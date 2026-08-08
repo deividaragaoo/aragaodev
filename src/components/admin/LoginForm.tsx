@@ -17,68 +17,56 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function onCredentials(formData: FormData) {
+  async function submitCredentials(username: string, password: string) {
     setError(null);
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            step: "credentials",
-            username: String(formData.get("username") || "").trim(),
-            password: String(formData.get("password") || ""),
-          }),
-        });
-        const payload = (await response.json()) as {
-          ok: boolean;
-          step?: Step;
-          error?: string;
-        };
-
-        if (!payload.ok) {
-          setError(payload.error || "Falha ao autenticar.");
-          setStep("credentials");
-          return;
-        }
-
-        setStep("keyword");
-      } catch {
-        setError("Falha de rede ao autenticar.");
-      }
+    const response = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        step: "credentials",
+        username,
+        password,
+      }),
     });
+    const payload = (await response.json()) as {
+      ok: boolean;
+      step?: Step;
+      error?: string;
+    };
+
+    if (!payload.ok) {
+      setError(payload.error || "Falha ao autenticar.");
+      setStep("credentials");
+      return;
+    }
+
+    setStep("keyword");
   }
 
-  function onKeyword(formData: FormData) {
+  async function submitKeyword(keyword: string) {
     setError(null);
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            step: "keyword",
-            keyword: String(formData.get("keyword") || ""),
-          }),
-        });
-        const payload = (await response.json()) as {
-          ok: boolean;
-          step?: string;
-          error?: string;
-        };
-
-        if (!payload.ok) {
-          setError(payload.error || "Falha ao validar palavra-chave.");
-          if (payload.step === "credentials") setStep("credentials");
-          return;
-        }
-
-        router.replace("/admin");
-        router.refresh();
-      } catch {
-        setError("Falha de rede ao validar palavra-chave.");
-      }
+    const response = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        step: "keyword",
+        keyword,
+      }),
     });
+    const payload = (await response.json()) as {
+      ok: boolean;
+      step?: string;
+      error?: string;
+    };
+
+    if (!payload.ok) {
+      setError(payload.error || "Falha ao validar palavra-chave.");
+      if (payload.step === "credentials") setStep("credentials");
+      return;
+    }
+
+    router.replace("/admin");
+    router.refresh();
   }
 
   return (
@@ -102,7 +90,22 @@ export function LoginForm() {
         </div>
 
         {step === "credentials" ? (
-          <form action={onCredentials} className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              const username = String(data.get("username") || "").trim();
+              const password = String(data.get("password") || "");
+              startTransition(async () => {
+                try {
+                  await submitCredentials(username, password);
+                } catch {
+                  setError("Falha de rede ao autenticar.");
+                }
+              });
+            }}
+          >
             <AdminField label="Usuário">
               <AdminInput
                 name="username"
@@ -126,7 +129,21 @@ export function LoginForm() {
             </AdminButton>
           </form>
         ) : (
-          <form action={onKeyword} className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              const keyword = String(data.get("keyword") || "");
+              startTransition(async () => {
+                try {
+                  await submitKeyword(keyword);
+                } catch {
+                  setError("Falha de rede ao validar palavra-chave.");
+                }
+              });
+            }}
+          >
             <AdminField label="Palavra-chave">
               <AdminInput
                 name="keyword"
