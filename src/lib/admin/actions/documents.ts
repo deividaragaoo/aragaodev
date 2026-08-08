@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/admin/activity";
 import { DOCUMENT_TYPES } from "@/lib/admin/constants";
-import { parseMoney, todayISO } from "@/lib/admin/format";
+import {
+  isFlexibleDateToken,
+  parseMoney,
+  todayISO,
+} from "@/lib/admin/format";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import {
@@ -81,10 +85,10 @@ function parseInstallments(formData: FormData) {
   return dates
     .map((dueDate, index) => ({
       number: index + 1,
-      dueDate,
+      dueDate: dueDate.trim(),
       amount: parseMoney(amounts[index] || "0"),
     }))
-    .filter((item) => item.dueDate && item.amount > 0);
+    .filter((item) => item.amount > 0 && item.dueDate);
 }
 
 export async function createDocumentAction(formData: FormData) {
@@ -193,7 +197,9 @@ export async function approveDocumentAsProjectAction(documentId: number) {
       value: doc.total,
       amountPaid: paid,
       startDate: todayISO(),
-      dueDate: doc.deliveryDeadline,
+      dueDate: isFlexibleDateToken(doc.deliveryDeadline)
+        ? null
+        : doc.deliveryDeadline,
       status: "aprovado",
       progress,
       documentId: doc.id,
@@ -227,7 +233,9 @@ export async function approveDocumentAsProjectAction(documentId: number) {
         ? [
             {
               number: 1,
-              dueDate: doc.deliveryDeadline || todayISO(),
+              dueDate: isFlexibleDateToken(doc.deliveryDeadline)
+                ? "definido_em_conversa"
+                : doc.deliveryDeadline || "definido_em_conversa",
               amount: Math.max(doc.total - downPayment, 0),
             },
           ]
@@ -240,7 +248,7 @@ export async function approveDocumentAsProjectAction(documentId: number) {
       documentId: doc.id,
       description: `${doc.number} — parcela ${installment.number}`,
       amount: installment.amount,
-      dueDate: installment.dueDate,
+      dueDate: installment.dueDate || "definido_em_conversa",
       paymentMethod: doc.paymentMethod,
       installment: `${installment.number}/${installmentRows.length}`,
       status: "pendente",

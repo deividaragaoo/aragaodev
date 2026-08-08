@@ -10,7 +10,11 @@ import {
 } from "@/components/admin/ui";
 import { ClientSelect, type ClientOption } from "@/components/admin/ClientSelect";
 import { DOCUMENT_TYPES, PAYMENT_METHODS } from "@/lib/admin/constants";
-import { formatCurrency } from "@/lib/admin/format";
+import {
+  FLEXIBLE_DATE_OPTIONS,
+  formatCurrency,
+  isFlexibleDateToken,
+} from "@/lib/admin/format";
 
 type Item = {
   name: string;
@@ -24,6 +28,14 @@ type Installment = {
   dueDate: string;
   amount: string;
 };
+
+type DateMode = "date" | FlexibleMode;
+type FlexibleMode = (typeof FLEXIBLE_DATE_OPTIONS)[number]["value"];
+
+function resolveDateMode(value?: string | null): DateMode {
+  if (isFlexibleDateToken(value)) return value;
+  return "date";
+}
 
 function money(value: string) {
   const cleaned = value.replace(/R\$\s?/g, "").replace(/\./g, "").replace(",", ".").trim();
@@ -49,8 +61,10 @@ export function DocumentForm({
   const [downPayment, setDownPayment] = useState("0");
   const [installmentsCount, setInstallmentsCount] = useState("1");
   const [installments, setInstallments] = useState<Installment[]>([
-    { dueDate: "", amount: "" },
+    { dueDate: "definido_em_conversa", amount: "" },
   ]);
+  const [deliveryMode, setDeliveryMode] = useState<DateMode>("definido_em_conversa");
+  const [deliveryDeadline, setDeliveryDeadline] = useState("");
   const [preview, setPreview] = useState(false);
 
   const totals = useMemo(() => {
@@ -70,9 +84,63 @@ export function DocumentForm({
     const base = n > 0 ? remaining / n : remaining;
     setInstallments(
       Array.from({ length: n }, (_, index) => ({
-        dueDate: installments[index]?.dueDate || "",
+        dueDate: installments[index]?.dueDate || "definido_em_conversa",
         amount: base.toFixed(2),
       }))
+    );
+  }
+
+  function DateModeField({
+    label,
+    name,
+    mode,
+    dateValue,
+    onModeChange,
+    onDateChange,
+  }: {
+    label: string;
+    name: string;
+    mode: DateMode;
+    dateValue: string;
+    onModeChange: (mode: DateMode) => void;
+    onDateChange: (value: string) => void;
+  }) {
+    const storedValue =
+      mode === "date" ? dateValue : mode;
+
+    return (
+      <AdminField label={label}>
+        <input type="hidden" name={name} value={storedValue} />
+        <div className="space-y-2">
+          <AdminSelect
+            value={mode}
+            onChange={(e) => onModeChange(e.target.value as DateMode)}
+          >
+            <option value="date">Data específica</option>
+            {FLEXIBLE_DATE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </AdminSelect>
+          {mode === "date" ? (
+            <AdminInput
+              type="date"
+              value={dateValue}
+              onChange={(e) => onDateChange(e.target.value)}
+            />
+          ) : (
+            <p className="text-xs text-muted">
+              Será salvo como “
+              {
+                FLEXIBLE_DATE_OPTIONS.find((item) => item.value === mode)
+                  ?.label
+              }
+              ”.
+            </p>
+          )}
+        </div>
+      </AdminField>
     );
   }
 
@@ -350,41 +418,60 @@ export function DocumentForm({
             </div>
 
             <div className="mt-4 space-y-3">
-              {installments.map((installment, index) => (
-                <div key={index} className="grid gap-3 md:grid-cols-2">
-                  <AdminField label={`Vencimento parcela ${index + 1}`}>
-                    <AdminInput
+              {installments.map((installment, index) => {
+                const mode = resolveDateMode(installment.dueDate);
+                const dateValue = isFlexibleDateToken(installment.dueDate)
+                  ? ""
+                  : installment.dueDate;
+
+                return (
+                  <div key={index} className="grid gap-3 md:grid-cols-2">
+                    <DateModeField
+                      label={`Vencimento parcela ${index + 1}`}
                       name="installmentDueDate"
-                      type="date"
-                      value={installment.dueDate}
-                      onChange={(e) =>
+                      mode={mode}
+                      dateValue={dateValue}
+                      onModeChange={(nextMode) =>
                         setInstallments((prev) =>
                           prev.map((row, i) =>
                             i === index
-                              ? { ...row, dueDate: e.target.value }
+                              ? {
+                                  ...row,
+                                  dueDate:
+                                    nextMode === "date"
+                                      ? dateValue || ""
+                                      : nextMode,
+                                }
                               : row
                           )
                         )
                       }
-                    />
-                  </AdminField>
-                  <AdminField label={`Valor parcela ${index + 1}`}>
-                    <AdminInput
-                      name="installmentAmount"
-                      value={installment.amount}
-                      onChange={(e) =>
+                      onDateChange={(value) =>
                         setInstallments((prev) =>
                           prev.map((row, i) =>
-                            i === index
-                              ? { ...row, amount: e.target.value }
-                              : row
+                            i === index ? { ...row, dueDate: value } : row
                           )
                         )
                       }
                     />
-                  </AdminField>
-                </div>
-              ))}
+                    <AdminField label={`Valor parcela ${index + 1}`}>
+                      <AdminInput
+                        name="installmentAmount"
+                        value={installment.amount}
+                        onChange={(e) =>
+                          setInstallments((prev) =>
+                            prev.map((row, i) =>
+                              i === index
+                                ? { ...row, amount: e.target.value }
+                                : row
+                            )
+                          )
+                        }
+                      />
+                    </AdminField>
+                  </div>
+                );
+              })}
             </div>
           </>
         ) : (
@@ -412,9 +499,20 @@ export function DocumentForm({
           <AdminField label="Validade do orçamento">
             <AdminInput name="validUntil" type="date" />
           </AdminField>
-          <AdminField label="Prazo de entrega">
-            <AdminInput name="deliveryDeadline" type="date" />
-          </AdminField>
+          <DateModeField
+            label="Prazo de entrega"
+            name="deliveryDeadline"
+            mode={deliveryMode}
+            dateValue={deliveryDeadline}
+            onModeChange={(mode) => {
+              setDeliveryMode(mode);
+              if (mode !== "date") setDeliveryDeadline("");
+            }}
+            onDateChange={(value) => {
+              setDeliveryDeadline(value);
+              setDeliveryMode("date");
+            }}
+          />
           <AdminField label="Garantia">
             <AdminInput name="warranty" placeholder="90 dias" />
           </AdminField>

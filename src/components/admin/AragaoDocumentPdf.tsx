@@ -138,6 +138,8 @@ function money(value: number) {
 
 function date(value?: string | null) {
   if (!value) return "—";
+  if (value === "sem_prazo") return "Sem prazo";
+  if (value === "definido_em_conversa") return "Definido em conversa";
   const [y, m, d] = value.split("-");
   if (!y || !m || !d) return value;
   return `${d}/${m}/${y}`;

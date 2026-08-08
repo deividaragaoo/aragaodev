@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   AdminButton,
   AdminField,
@@ -11,6 +12,15 @@ import {
 import { ClientSelect, type ClientOption } from "@/components/admin/ClientSelect";
 import { PROJECT_STATUSES } from "@/lib/admin/constants";
 import { formatCurrency, parseMoney } from "@/lib/admin/format";
+
+function SaveProjectButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <AdminButton type="submit" disabled={pending}>
+      {pending ? "Salvando..." : label}
+    </AdminButton>
+  );
+}
 
 type ProjectValues = {
   clientId?: number;
@@ -194,7 +204,9 @@ export function ProjectForm({
         <AdminTextarea name="notes" defaultValue={initial?.notes || ""} />
       </AdminField>
       <div className="md:col-span-2">
-        <AdminButton type="submit">Salvar projeto</AdminButton>
+        <SaveProjectButton
+          label={initial?.name ? "Salvar alterações" : "Salvar projeto"}
+        />
       </div>
     </form>
   );

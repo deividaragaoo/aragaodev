@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -64,6 +64,37 @@ export async function createProjectAction(formData: FormData) {
   await ensureAdminReady();
   const parsed = projectSchema.parse(formValues(formData));
   const progress = paymentProgress(parsed.value, parsed.amountPaid);
+
+  // Guard against double-submit creating duplicate projects.
+  const recent = await db
+    .select()
+    .from(projects)
+    .where(
+      and(
+        eq(projects.clientId, parsed.clientId),
+        eq(projects.name, parsed.name)
+      )
+    )
+    .orderBy(desc(projects.createdAt))
+    .limit(1);
+
+  const latest = recent[0];
+  if (latest) {
+    const createdAtMs = Date.parse(
+      latest.createdAt.includes("T")
+        ? latest.createdAt
+        : latest.createdAt.replace(" ", "T") + "Z"
+    );
+    const sameValue = Math.abs((latest.value || 0) - parsed.value) < 0.01;
+    if (
+      sameValue &&
+      Number.isFinite(createdAtMs) &&
+      Date.now() - createdAtMs < 15_000
+    ) {
+      revalidateProjectPaths(latest.id);
+      redirect("/admin/projetos");
+    }
+  }
 
   const [row] = await db
     .insert(projects)

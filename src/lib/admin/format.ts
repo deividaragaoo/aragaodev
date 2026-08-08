@@ -5,8 +5,29 @@ export function formatCurrency(value: number) {
   }).format(value || 0);
 }
 
+export const FLEXIBLE_DATE_OPTIONS = [
+  { value: "sem_prazo", label: "Sem prazo" },
+  { value: "definido_em_conversa", label: "Definido em conversa" },
+] as const;
+
+export type FlexibleDateToken =
+  (typeof FLEXIBLE_DATE_OPTIONS)[number]["value"];
+
+export function isFlexibleDateToken(
+  value?: string | null
+): value is FlexibleDateToken {
+  return (
+    value === "sem_prazo" || value === "definido_em_conversa"
+  );
+}
+
 export function formatDate(value?: string | null) {
   if (!value) return "—";
+  if (isFlexibleDateToken(value)) {
+    return (
+      FLEXIBLE_DATE_OPTIONS.find((item) => item.value === value)?.label || value
+    );
+  }
   const date = new Date(`${value}T12:00:00`);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("pt-BR").format(date);
@@ -36,6 +57,7 @@ export function todayISO() {
 
 export function isOverdue(dueDate: string, status: string) {
   if (status === "pago" || status === "cancelado") return false;
+  if (!dueDate || isFlexibleDateToken(dueDate)) return false;
   return dueDate < todayISO();
 }
 
