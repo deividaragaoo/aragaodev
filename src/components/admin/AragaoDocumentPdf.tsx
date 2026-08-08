@@ -64,97 +64,124 @@ type Company = {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontSize: 10,
+    paddingTop: 28,
+    paddingBottom: 28,
+    paddingHorizontal: 32,
+    fontSize: 11,
     fontFamily: "Helvetica",
     color: "#111",
+    lineHeight: 1.35,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 12,
     borderBottom: "2px solid #ff6b35",
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   logoBar: {
     backgroundColor: "#0a0a0a",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 6,
     alignItems: "flex-start",
   },
   logo: {
-    width: 180,
-    height: 42,
+    width: 150,
+    height: 35,
   },
   brand: {
-    fontSize: 20,
+    fontSize: 16,
     fontFamily: "Helvetica-Bold",
     color: "#111",
   },
   tagline: {
-    marginTop: 4,
-    fontSize: 11,
+    marginTop: 2,
+    fontSize: 10,
     color: "#ff6b35",
   },
   meta: {
-    marginTop: 8,
+    marginTop: 4,
+    fontSize: 9,
     color: "#555",
   },
   sectionTitle: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontSize: 12,
+    marginTop: 10,
+    marginBottom: 4,
+    fontSize: 11,
     fontFamily: "Helvetica-Bold",
     color: "#ff3d00",
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 2,
+    fontSize: 10,
+  },
+  clientLine: {
+    fontSize: 10,
+    marginBottom: 1,
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#f4f4f5",
-    padding: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 5,
     fontFamily: "Helvetica-Bold",
+    fontSize: 10,
   },
   tableRow: {
     flexDirection: "row",
-    padding: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 5,
     borderBottom: "1px solid #e4e4e7",
+    fontSize: 10,
   },
   colName: { width: "40%" },
   colQty: { width: "12%" },
   colPrice: { width: "16%" },
   colDisc: { width: "16%" },
   colTotal: { width: "16%", textAlign: "right" },
-  colNameWide: { width: "70%" },
-  colTotalWide: { width: "30%", textAlign: "right" },
   highlight: {
-    marginTop: 16,
-    marginBottom: 8,
-    fontSize: 13,
+    marginTop: 8,
+    marginBottom: 4,
+    fontSize: 12,
     fontFamily: "Helvetica-Bold",
   },
   bodyText: {
-    marginTop: 4,
-    lineHeight: 1.5,
+    marginTop: 2,
+    marginBottom: 2,
+    fontSize: 11,
+    lineHeight: 1.35,
+    textAlign: "justify",
+  },
+  mutedText: {
+    marginTop: 1,
+    marginBottom: 2,
+    fontSize: 9,
+    lineHeight: 1.3,
+    color: "#555",
+  },
+  totals: {
+    marginTop: 6,
+    fontSize: 10,
   },
   footer: {
-    marginTop: 28,
+    marginTop: 14,
     borderTop: "1px solid #ddd",
-    paddingTop: 12,
+    paddingTop: 8,
+    fontSize: 9,
     color: "#555",
   },
   signatures: {
-    marginTop: 36,
+    marginTop: 22,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
   signBox: {
-    width: "45%",
+    width: "42%",
     borderTop: "1px solid #111",
-    paddingTop: 8,
+    paddingTop: 6,
     textAlign: "center",
+    fontSize: 10,
   },
 });
 
@@ -174,6 +201,14 @@ function date(value?: string | null) {
   return `${d}/${m}/${y}`;
 }
 
+function meaningfulText(value?: string | null) {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^(n\/?a|n\.?\s*a\.?|nenhum|nenhuma|-|—)$/i.test(trimmed)) return null;
+  return trimmed;
+}
+
 export function AragaoDocumentPdf({
   doc,
   company,
@@ -188,10 +223,21 @@ export function AragaoDocumentPdf({
   const paidValue =
     doc.amountPaid && doc.amountPaid > 0 ? doc.amountPaid : doc.total;
   const namedItems = doc.items.filter((item) => item.name);
+  const notes = meaningfulText(doc.notes);
+  const conditions = meaningfulText(doc.conditions);
+  const termoBody = conditions || notes;
   const showPaymentBlock =
     profile.showPaymentTerms ||
     profile.showPaidAmount ||
     (Boolean(doc.trackPayments) && Boolean(doc.paymentMethod));
+
+  const clientBits = [
+    doc.client.company,
+    doc.client.document ? `CPF/CNPJ: ${doc.client.document}` : null,
+    doc.client.whatsapp ? `WhatsApp: ${doc.client.whatsapp}` : null,
+    doc.client.email ? `E-mail: ${doc.client.email}` : null,
+    doc.client.address ? `Endereço: ${doc.client.address}` : null,
+  ].filter(Boolean);
 
   return (
     <Document>
@@ -222,12 +268,10 @@ export function AragaoDocumentPdf({
         </View>
 
         <Text style={styles.sectionTitle}>Cliente</Text>
-        <Text>{doc.client.name}</Text>
-        {doc.client.company ? <Text>{doc.client.company}</Text> : null}
-        {doc.client.document ? <Text>CPF/CNPJ: {doc.client.document}</Text> : null}
-        {doc.client.whatsapp ? <Text>WhatsApp: {doc.client.whatsapp}</Text> : null}
-        {doc.client.email ? <Text>E-mail: {doc.client.email}</Text> : null}
-        {doc.client.address ? <Text>Endereço: {doc.client.address}</Text> : null}
+        <Text style={styles.clientLine}>{doc.client.name}</Text>
+        {clientBits.length > 0 ? (
+          <Text style={styles.mutedText}>{clientBits.join(" · ")}</Text>
+        ) : null}
 
         {doc.type === "recibo" ? (
           <>
@@ -238,7 +282,7 @@ export function AragaoDocumentPdf({
               Forma de pagamento: {doc.paymentMethod || "—"}
             </Text>
             {profile.showRemainingBalance ? (
-              <View style={{ marginTop: 10 }}>
+              <View style={{ marginTop: 4 }}>
                 <Text style={styles.bodyText}>
                   {profile.labels.contractTotal}: {money(doc.total)}
                 </Text>
@@ -249,7 +293,6 @@ export function AragaoDocumentPdf({
                   style={{
                     ...styles.bodyText,
                     fontFamily: "Helvetica-Bold",
-                    marginTop: 4,
                   }}
                 >
                   {profile.labels.remaining}:{" "}
@@ -280,9 +323,9 @@ export function AragaoDocumentPdf({
               Comprovamos o pagamento de {money(paidValue)}
             </Text>
             <Text style={styles.bodyText}>
-              Forma de pagamento: {doc.paymentMethod || "—"}
+              Forma de pagamento: {doc.paymentMethod || "—"} · Data:{" "}
+              {date(doc.issueDate)}
             </Text>
-            <Text style={styles.bodyText}>Data: {date(doc.issueDate)}</Text>
             {namedItems.length > 0 ? (
               <>
                 <Text style={styles.sectionTitle}>{profile.labels.services}</Text>
@@ -299,25 +342,35 @@ export function AragaoDocumentPdf({
 
         {doc.type === "termo" ? (
           <>
-            {namedItems.length > 0 ? (
+            {namedItems.length > 0 &&
+            !(namedItems.length === 1 && namedItems[0].name === "Termo de serviço") ? (
               <>
                 <Text style={styles.sectionTitle}>{profile.labels.services}</Text>
                 {namedItems.map((item, index) => (
-                  <View key={index} style={{ marginBottom: 6 }}>
-                    <Text>• {item.name}</Text>
-                    {profile.printItemDescriptions && item.description ? (
-                      <Text style={styles.bodyText}>{item.description}</Text>
+                  <View key={index} style={{ marginBottom: 2 }}>
+                    <Text style={styles.bodyText}>• {item.name}</Text>
+                    {profile.printItemDescriptions &&
+                    meaningfulText(item.description) ? (
+                      <Text style={styles.mutedText}>
+                        {meaningfulText(item.description)}
+                      </Text>
                     ) : null}
                   </View>
                 ))}
               </>
             ) : null}
-            {doc.conditions ? (
+            {termoBody ? (
               <>
                 <Text style={styles.sectionTitle}>
                   {profile.labels.conditions}
                 </Text>
-                <Text style={styles.bodyText}>{doc.conditions}</Text>
+                <Text style={styles.bodyText}>{termoBody}</Text>
+              </>
+            ) : null}
+            {conditions && notes && notes !== conditions ? (
+              <>
+                <Text style={styles.sectionTitle}>{profile.labels.notes}</Text>
+                <Text style={styles.bodyText}>{notes}</Text>
               </>
             ) : null}
           </>
@@ -345,20 +398,21 @@ export function AragaoDocumentPdf({
                   <Text style={styles.colDisc}>{money(item.discount)}</Text>
                   <Text style={styles.colTotal}>{money(item.total)}</Text>
                 </View>
-                {profile.printItemDescriptions && item.description ? (
-                  <Text style={{ ...styles.bodyText, marginBottom: 4, color: "#555" }}>
-                    {item.description}
+                {profile.printItemDescriptions &&
+                meaningfulText(item.description) ? (
+                  <Text style={styles.mutedText}>
+                    {meaningfulText(item.description)}
                   </Text>
                 ) : null}
               </View>
             ))}
 
-            <View style={{ marginTop: 12 }}>
+            <View style={styles.totals}>
               <Text>Subtotal: {money(doc.subtotal)}</Text>
               {doc.discount > 0 ? (
                 <Text>Desconto: {money(doc.discount)}</Text>
               ) : null}
-              <Text style={{ fontFamily: "Helvetica-Bold", marginTop: 4 }}>
+              <Text style={{ fontFamily: "Helvetica-Bold", marginTop: 2 }}>
                 Total: {money(doc.total)}
               </Text>
             </View>
@@ -370,65 +424,67 @@ export function AragaoDocumentPdf({
         doc.type !== "comprovante" ? (
           <>
             <Text style={styles.sectionTitle}>Pagamento</Text>
-            <Text>Forma: {doc.paymentMethod || "—"}</Text>
-            {profile.showInstallmentPlan ? (
-              <>
-                <Text>Entrada: {money(doc.downPayment || 0)}</Text>
-                {doc.installments.map((installment) => (
-                  <Text key={installment.number}>
+            <Text style={styles.bodyText}>
+              Forma: {doc.paymentMethod || "—"}
+              {profile.showInstallmentPlan
+                ? ` · Entrada: ${money(doc.downPayment || 0)}`
+                : ""}
+            </Text>
+            {profile.showInstallmentPlan
+              ? doc.installments.map((installment) => (
+                  <Text key={installment.number} style={styles.bodyText}>
                     Parcela {installment.number}: {money(installment.amount)} —
                     venc. {date(installment.dueDate)}
                   </Text>
-                ))}
-              </>
-            ) : null}
+                ))
+              : null}
           </>
         ) : null}
 
-        {(profile.showValidUntil ||
+        {doc.type !== "termo" &&
+        doc.type !== "recibo" &&
+        doc.type !== "comprovante" &&
+        (profile.showValidUntil ||
           profile.showDeliveryDeadline ||
           profile.showWarranty ||
-          (profile.showConditions &&
-            doc.conditions &&
-            doc.type !== "termo") ||
-          (profile.showNotes && doc.notes)) &&
-        doc.type !== "recibo" &&
-        doc.type !== "comprovante" ? (
+          (profile.showConditions && conditions) ||
+          (profile.showNotes && notes)) ? (
           <>
             <Text style={styles.sectionTitle}>
               {doc.type === "contrato" ? "Condições contratuais" : "Condições"}
             </Text>
             {profile.showValidUntil ? (
-              <Text>
+              <Text style={styles.bodyText}>
                 {profile.labels.validUntil}: {date(doc.validUntil)}
               </Text>
             ) : null}
             {profile.showDeliveryDeadline ? (
-              <Text>Prazo de entrega: {date(doc.deliveryDeadline)}</Text>
-            ) : null}
-            {profile.showWarranty ? (
-              <Text>Garantia: {doc.warranty || "—"}</Text>
-            ) : null}
-            {profile.showNotes && doc.notes ? (
               <Text style={styles.bodyText}>
-                {profile.labels.notes}: {doc.notes}
+                Prazo de entrega: {date(doc.deliveryDeadline)}
               </Text>
             ) : null}
-            {profile.showConditions &&
-            doc.conditions &&
-            doc.type !== "termo" ? (
+            {profile.showWarranty ? (
               <Text style={styles.bodyText}>
-                {profile.labels.conditions}: {doc.conditions}
+                Garantia: {doc.warranty || "—"}
+              </Text>
+            ) : null}
+            {profile.showNotes && notes ? (
+              <Text style={styles.bodyText}>
+                {profile.labels.notes}: {notes}
+              </Text>
+            ) : null}
+            {profile.showConditions && conditions ? (
+              <Text style={styles.bodyText}>
+                {profile.labels.conditions}: {conditions}
               </Text>
             ) : null}
           </>
         ) : null}
 
-        {(doc.type === "recibo" || doc.type === "comprovante") &&
-        doc.notes ? (
+        {(doc.type === "recibo" || doc.type === "comprovante") && notes ? (
           <>
             <Text style={styles.sectionTitle}>{profile.labels.notes}</Text>
-            <Text style={styles.bodyText}>{doc.notes}</Text>
+            <Text style={styles.bodyText}>{notes}</Text>
           </>
         ) : null}
 
