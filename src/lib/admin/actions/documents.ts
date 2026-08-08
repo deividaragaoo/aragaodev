@@ -127,6 +127,11 @@ export async function createDocumentAction(formData: FormData) {
       paymentMethod: String(formData.get("paymentMethod") || "") || null,
       downPayment: parseMoney(String(formData.get("downPayment") || "0")),
       installmentsCount: installments.length || Number(formData.get("installmentsCount") || 1),
+      trackPayments: formData.get("trackPayments") === "1" ? 1 : 0,
+      amountPaid: Math.min(
+        total,
+        parseMoney(String(formData.get("amountPaid") || "0"))
+      ),
       subtotal,
       discount,
       total,
@@ -301,4 +306,45 @@ export async function logPdfGeneratedAction(documentId: number, number: string) 
     entityId: documentId,
     details: number,
   });
+}
+
+export async function updateDocumentPaymentAction(
+  id: number,
+  formData: FormData
+) {
+  await requireSession();
+  await ensureAdminReady();
+
+  const doc = await db.query.documents.findFirst({
+    where: eq(documents.id, id),
+  });
+  if (!doc) return;
+
+  const trackPayments = formData.get("trackPayments") === "1" ? 1 : 0;
+  const amountPaid = Math.min(
+    doc.total || 0,
+    Math.max(0, parseMoney(String(formData.get("amountPaid") || "0")))
+  );
+
+  await db
+    .update(documents)
+    .set({
+      trackPayments,
+      amountPaid: trackPayments ? amountPaid : 0,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(documents.id, id));
+
+  await logActivity({
+    action: trackPayments
+      ? "Financeiro do documento atualizado"
+      : "Acompanhamento financeiro desativado",
+    entityType: "document",
+    entityId: id,
+    details: doc.number,
+  });
+
+  await persistAdminDb();
+  revalidatePath("/admin/documentos");
+  revalidatePath(`/admin/documentos/${id}`);
 }

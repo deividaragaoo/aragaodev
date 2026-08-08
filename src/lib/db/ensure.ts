@@ -127,6 +127,8 @@ CREATE TABLE IF NOT EXISTS documents (
   payment_method TEXT,
   down_payment REAL DEFAULT 0,
   installments_count INTEGER DEFAULT 1,
+  track_payments INTEGER NOT NULL DEFAULT 0,
+  amount_paid REAL NOT NULL DEFAULT 0,
   subtotal REAL NOT NULL DEFAULT 0,
   discount REAL NOT NULL DEFAULT 0,
   total REAL NOT NULL DEFAULT 0,
@@ -227,6 +229,8 @@ async function ensureColumn(
 async function ensureSchemaMigrations() {
   await ensureColumn("projects", "progress", "INTEGER NOT NULL DEFAULT 0");
   await ensureColumn("projects", "amount_paid", "REAL NOT NULL DEFAULT 0");
+  await ensureColumn("documents", "track_payments", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn("documents", "amount_paid", "REAL NOT NULL DEFAULT 0");
   await ensureColumn("payables", "recurrence", "TEXT DEFAULT 'unica'");
 
   // Old preview documents schema is incompatible with the current app.

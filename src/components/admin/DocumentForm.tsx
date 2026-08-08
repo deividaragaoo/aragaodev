@@ -44,6 +44,8 @@ export function DocumentForm({
   const [items, setItems] = useState<Item[]>([
     { name: "", description: "", quantity: "1", unitPrice: "", discount: "0" },
   ]);
+  const [trackPayments, setTrackPayments] = useState(false);
+  const [amountPaid, setAmountPaid] = useState("0");
   const [downPayment, setDownPayment] = useState("0");
   const [installmentsCount, setInstallmentsCount] = useState("1");
   const [installments, setInstallments] = useState<Installment[]>([
@@ -227,81 +229,174 @@ export function DocumentForm({
       </section>
 
       <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-6">
-        <h2 className="mb-4 text-lg font-medium">Pagamento</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <AdminField label="Forma de pagamento">
-            <AdminSelect name="paymentMethod">
-              <option value="">Selecione</option>
-              {PAYMENT_METHODS.map((method) => (
-                <option key={method} value={method}>
-                  {method}
-                </option>
-              ))}
-            </AdminSelect>
-          </AdminField>
-          <AdminField label="Entrada">
-            <AdminInput
-              name="downPayment"
-              value={downPayment}
-              onChange={(e) => {
-                setDownPayment(e.target.value);
-                recalcInstallments(
-                  Number(installmentsCount || 1),
-                  money(e.target.value),
-                  totals.total
-                );
-              }}
-            />
-          </AdminField>
-          <AdminField label="Qtd. parcelas">
-            <AdminInput
-              name="installmentsCount"
-              value={installmentsCount}
-              onChange={(e) => {
-                setInstallmentsCount(e.target.value);
-                recalcInstallments(
-                  Number(e.target.value || 1),
-                  money(downPayment),
-                  totals.total
-                );
-              }}
-            />
-          </AdminField>
-        </div>
+        <h2 className="mb-2 text-lg font-medium">Pagamento</h2>
+        <label className="mb-4 flex cursor-pointer items-start gap-2 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={trackPayments}
+            onChange={(e) => setTrackPayments(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[#ff6b35]"
+          />
+          <span>
+            Acompanhar valores pagos neste documento
+            <span className="mt-0.5 block text-xs">
+              Marque só se quiser ver quanto já pagou e quanto ainda deve.
+            </span>
+          </span>
+        </label>
+        <input
+          type="hidden"
+          name="trackPayments"
+          value={trackPayments ? "1" : "0"}
+        />
 
-        <div className="mt-4 space-y-3">
-          {installments.map((installment, index) => (
-            <div key={index} className="grid gap-3 md:grid-cols-2">
-              <AdminField label={`Vencimento parcela ${index + 1}`}>
+        {trackPayments ? (
+          <>
+            <div className="mb-4 grid gap-3 rounded-xl border border-white/[0.06] bg-black/20 p-4 sm:grid-cols-3">
+              <AdminField label="Valor já pago">
                 <AdminInput
-                  name="installmentDueDate"
-                  type="date"
-                  value={installment.dueDate}
-                  onChange={(e) =>
-                    setInstallments((prev) =>
-                      prev.map((row, i) =>
-                        i === index ? { ...row, dueDate: e.target.value } : row
-                      )
-                    )
-                  }
+                  name="amountPaid"
+                  value={amountPaid}
+                  onChange={(e) => setAmountPaid(e.target.value)}
                 />
               </AdminField>
-              <AdminField label={`Valor parcela ${index + 1}`}>
+              <AdminField label="Ainda deve">
                 <AdminInput
-                  name="installmentAmount"
-                  value={installment.amount}
-                  onChange={(e) =>
-                    setInstallments((prev) =>
-                      prev.map((row, i) =>
-                        i === index ? { ...row, amount: e.target.value } : row
-                      )
-                    )
-                  }
+                  readOnly
+                  value={Math.max(
+                    0,
+                    totals.total - money(amountPaid)
+                  ).toFixed(2)}
+                />
+              </AdminField>
+              <AdminField label="Total do documento">
+                <AdminInput readOnly value={totals.total.toFixed(2)} />
+              </AdminField>
+              <div className="sm:col-span-3">
+                <div className="mb-2 flex justify-between text-xs text-muted">
+                  <span>
+                    {formatCurrency(money(amountPaid))} de{" "}
+                    {formatCurrency(totals.total)}
+                  </span>
+                  <span>
+                    {totals.total > 0
+                      ? Math.min(
+                          100,
+                          Math.round((money(amountPaid) / totals.total) * 100)
+                        )
+                      : 0}
+                    %
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#ff7a18] to-[#ff3d00]"
+                    style={{
+                      width: `${
+                        totals.total > 0
+                          ? Math.min(
+                              100,
+                              Math.round(
+                                (money(amountPaid) / totals.total) * 100
+                              )
+                            )
+                          : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <AdminField label="Forma de pagamento">
+                <AdminSelect name="paymentMethod">
+                  <option value="">Selecione</option>
+                  {PAYMENT_METHODS.map((method) => (
+                    <option key={method} value={method}>
+                      {method}
+                    </option>
+                  ))}
+                </AdminSelect>
+              </AdminField>
+              <AdminField label="Entrada">
+                <AdminInput
+                  name="downPayment"
+                  value={downPayment}
+                  onChange={(e) => {
+                    setDownPayment(e.target.value);
+                    recalcInstallments(
+                      Number(installmentsCount || 1),
+                      money(e.target.value),
+                      totals.total
+                    );
+                  }}
+                />
+              </AdminField>
+              <AdminField label="Qtd. parcelas">
+                <AdminInput
+                  name="installmentsCount"
+                  value={installmentsCount}
+                  onChange={(e) => {
+                    setInstallmentsCount(e.target.value);
+                    recalcInstallments(
+                      Number(e.target.value || 1),
+                      money(downPayment),
+                      totals.total
+                    );
+                  }}
                 />
               </AdminField>
             </div>
-          ))}
-        </div>
+
+            <div className="mt-4 space-y-3">
+              {installments.map((installment, index) => (
+                <div key={index} className="grid gap-3 md:grid-cols-2">
+                  <AdminField label={`Vencimento parcela ${index + 1}`}>
+                    <AdminInput
+                      name="installmentDueDate"
+                      type="date"
+                      value={installment.dueDate}
+                      onChange={(e) =>
+                        setInstallments((prev) =>
+                          prev.map((row, i) =>
+                            i === index
+                              ? { ...row, dueDate: e.target.value }
+                              : row
+                          )
+                        )
+                      }
+                    />
+                  </AdminField>
+                  <AdminField label={`Valor parcela ${index + 1}`}>
+                    <AdminInput
+                      name="installmentAmount"
+                      value={installment.amount}
+                      onChange={(e) =>
+                        setInstallments((prev) =>
+                          prev.map((row, i) =>
+                            i === index
+                              ? { ...row, amount: e.target.value }
+                              : row
+                          )
+                        )
+                      }
+                    />
+                  </AdminField>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <input type="hidden" name="amountPaid" value="0" />
+            <input type="hidden" name="downPayment" value="0" />
+            <input type="hidden" name="installmentsCount" value="1" />
+            <p className="text-sm text-muted">
+              Sem acompanhamento financeiro neste documento.
+            </p>
+          </>
+        )}
       </section>
 
       <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-6">

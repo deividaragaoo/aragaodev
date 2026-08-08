@@ -44,8 +44,11 @@ export default async function DocumentosPage() {
                   {doc.clientName} · {formatDate(doc.issueDate)}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <p className="text-sm font-medium">{formatCurrency(doc.total)}</p>
+                {doc.trackPayments ? (
+                  <StatusBadge label="Financeiro" tone="warning" />
+                ) : null}
                 <StatusBadge label={doc.status} />
               </div>
             </Link>

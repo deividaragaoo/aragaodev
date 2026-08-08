@@ -130,6 +130,8 @@ export const documents = sqliteTable("documents", {
   paymentMethod: text("payment_method"),
   downPayment: real("down_payment").default(0),
   installmentsCount: integer("installments_count").default(1),
+  trackPayments: integer("track_payments").notNull().default(0),
+  amountPaid: real("amount_paid").notNull().default(0),
   subtotal: real("subtotal").notNull().default(0),
   discount: real("discount").notNull().default(0),
   total: real("total").notNull().default(0),

@@ -6,6 +6,7 @@ import {
   PageHeader,
   StatusBadge,
 } from "@/components/admin/ui";
+import { DocumentPaymentPanel } from "@/components/admin/DocumentPaymentPanel";
 import { PrintDocumentButton } from "@/components/admin/PrintDocumentButton";
 import {
   approveDocumentAsProjectAction,
@@ -65,6 +66,13 @@ export default async function DocumentoDetalhePage({
         </form>
       ) : null}
 
+      <DocumentPaymentPanel
+        documentId={doc.id}
+        total={doc.total || 0}
+        trackPayments={doc.trackPayments || 0}
+        amountPaid={doc.amountPaid || 0}
+      />
+
       <div
         className="grid gap-4 lg:grid-cols-2 print:grid-cols-1"
         id="document-preview"
@@ -87,7 +95,9 @@ export default async function DocumentoDetalhePage({
             <p>Entrega: {formatDate(doc.deliveryDeadline)}</p>
             <p>Garantia: {doc.warranty || "—"}</p>
             <p>Pagamento: {doc.paymentMethod || "—"}</p>
-            <p>Entrada: {formatCurrency(doc.downPayment || 0)}</p>
+            {doc.trackPayments ? (
+              <p>Entrada: {formatCurrency(doc.downPayment || 0)}</p>
+            ) : null}
           </div>
         </AdminCard>
 
@@ -114,7 +124,7 @@ export default async function DocumentoDetalhePage({
           </p>
         </AdminCard>
 
-        {doc.installments.length > 0 ? (
+        {doc.trackPayments && doc.installments.length > 0 ? (
           <AdminCard className="lg:col-span-2">
             <h2 className="mb-3 text-sm font-medium">Parcelas</h2>
             <div className="space-y-2">

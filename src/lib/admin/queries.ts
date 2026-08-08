@@ -343,6 +343,8 @@ export async function listDocuments() {
       status: documents.status,
       issueDate: documents.issueDate,
       total: documents.total,
+      trackPayments: documents.trackPayments,
+      amountPaid: documents.amountPaid,
       clientId: documents.clientId,
       clientName: clients.name,
       createdAt: documents.createdAt,
