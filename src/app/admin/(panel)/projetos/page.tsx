@@ -5,24 +5,13 @@ import {
   PageHeader,
   StatusBadge,
 } from "@/components/admin/ui";
-import { ProjectForm } from "@/components/admin/ProjectForm";
 import { ProjectProgress } from "@/components/admin/ProjectProgress";
 import { PROJECT_STATUSES } from "@/lib/admin/constants";
 import { formatCurrency, formatDate } from "@/lib/admin/format";
-import {
-  getProjectFinance,
-  listClients,
-  listProjects,
-} from "@/lib/admin/queries";
-import { createProjectAction } from "@/lib/admin/actions/projects";
+import { getProjectFinance, listProjects } from "@/lib/admin/queries";
 
-export default async function ProjetosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ clientId?: string }>;
-}) {
-  const { clientId } = await searchParams;
-  const [rows, clients] = await Promise.all([listProjects(), listClients()]);
+export default async function ProjetosPage() {
+  const rows = await listProjects();
   const finances = await Promise.all(
     rows.map(async (project) => ({
       id: project.id,
@@ -30,30 +19,25 @@ export default async function ProjetosPage({
     }))
   );
   const financeMap = Object.fromEntries(finances.map((f) => [f.id, f]));
-  const preselectedClientId = clientId ? Number(clientId) : undefined;
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Projetos"
-        description="Controle dos trabalhos em andamento."
+        description="Trabalhos em andamento e histórico de projetos."
+        actions={
+          <Link href="/admin/projetos/novo">
+            <AdminButton>+ Adicionar projeto</AdminButton>
+          </Link>
+        }
       />
 
       <section>
-        <h2 className="mb-4 text-lg font-medium">Novo projeto</h2>
-        <ProjectForm
-          action={createProjectAction}
-          clients={clients}
-          preselectedClientId={
-            Number.isFinite(preselectedClientId) ? preselectedClientId : undefined
-          }
-        />
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-lg font-medium">Lista</h2>
         {rows.length === 0 ? (
-          <EmptyState title="Nenhum projeto cadastrado" />
+          <EmptyState
+            title="Nenhum projeto cadastrado"
+            description="Adicione o primeiro projeto pela aba Adicionar projeto."
+          />
         ) : (
           <div className="space-y-3">
             {rows.map((project) => {

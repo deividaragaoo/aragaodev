@@ -71,7 +71,7 @@ export async function createClientAction(formData: FormData) {
 
   await persistAdminDb();
   revalidateClientPaths(created.id);
-  redirect(`/admin/projetos?clientId=${created.id}`);
+  redirect(`/admin/projetos/novo?clientId=${created.id}`);
 }
 
 export async function updateClientAction(id: number, formData: FormData) {

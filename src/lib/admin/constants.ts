@@ -65,6 +65,11 @@ export const ADMIN_NAV = [
   { href: "/admin", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/admin/clientes", label: "Clientes", icon: "Users" },
   { href: "/admin/projetos", label: "Projetos", icon: "FolderKanban" },
+  {
+    href: "/admin/projetos/novo",
+    label: "Adicionar projeto",
+    icon: "FolderPlus",
+  },
   { href: "/admin/financeiro", label: "Financeiro", icon: "Wallet" },
   { href: "/admin/documentos", label: "Documentos", icon: "FileText" },
   { href: "/admin/historico", label: "Histórico", icon: "History" },

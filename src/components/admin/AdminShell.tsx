@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   FileText,
   FolderKanban,
+  FolderPlus,
   History,
   LayoutDashboard,
   LogOut,
@@ -24,11 +25,26 @@ const icons = {
   LayoutDashboard,
   Users,
   FolderKanban,
+  FolderPlus,
   Wallet,
   FileText,
   History,
   Settings,
 };
+
+function isNavActive(pathname: string, href: string) {
+  if (href === "/admin") return pathname === "/admin";
+
+  const matches = ADMIN_NAV.filter(
+    (item) =>
+      item.href !== "/admin" &&
+      (pathname === item.href || pathname.startsWith(`${item.href}/`))
+  ).map((item) => item.href);
+
+  if (matches.length === 0) return false;
+  const best = matches.reduce((a, b) => (a.length >= b.length ? a : b));
+  return best === href;
+}
 
 export function AdminShell({
   children,
@@ -77,10 +93,7 @@ export function AdminShell({
             <nav className="flex-1 space-y-1">
               {ADMIN_NAV.map((item) => {
                 const Icon = icons[item.icon as keyof typeof icons];
-                const active =
-                  item.href === "/admin"
-                    ? pathname === "/admin"
-                    : pathname.startsWith(item.href);
+                const active = isNavActive(pathname, item.href);
 
                 return (
                   <Link

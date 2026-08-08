@@ -205,7 +205,7 @@ export function ProjectForm({
       </AdminField>
       <div className="md:col-span-2">
         <SaveProjectButton
-          label={initial?.name ? "Salvar alterações" : "Salvar projeto"}
+          label={initial?.name ? "Salvar alterações" : "Adicionar projeto"}
         />
       </div>
     </form>

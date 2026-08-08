@@ -54,6 +54,7 @@ function formValues(formData: FormData) {
 
 function revalidateProjectPaths(id?: number) {
   revalidatePath("/admin/projetos");
+  revalidatePath("/admin/projetos/novo");
   revalidatePath("/admin/clientes");
   revalidatePath("/admin");
   if (id) revalidatePath(`/admin/projetos/${id}`);
