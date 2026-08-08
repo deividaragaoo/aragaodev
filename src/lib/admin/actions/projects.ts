@@ -9,6 +9,7 @@ import { parseMoneyToCents } from "@/lib/admin/format";
 import { requireAdminSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ensureAdminReady } from "@/lib/db/ensure";
+import { firstReturned } from "@/lib/db/result";
 import { projects } from "@/lib/db/schema";
 
 const projectSchema = z.object({
@@ -38,7 +39,8 @@ export async function createProjectAction(formData: FormData) {
   await ensureAdminReady();
   const values = projectValues(formData);
   const timestamp = new Date().toISOString();
-  const [project] = await db
+  const project = firstReturned(
+    await db
     .insert(projects)
     .values({
       ...values,
@@ -46,7 +48,8 @@ export async function createProjectAction(formData: FormData) {
       createdAt: timestamp,
       updatedAt: timestamp,
     })
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,
@@ -73,7 +76,8 @@ export async function updateProjectAction(formData: FormData) {
   const completedAt =
     values.status === "completed" ? new Date().toISOString() : null;
 
-  const [project] = await db
+  const project = firstReturned(
+    await db
     .update(projects)
     .set({
       ...values,
@@ -81,7 +85,8 @@ export async function updateProjectAction(formData: FormData) {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(projects.id, id))
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,

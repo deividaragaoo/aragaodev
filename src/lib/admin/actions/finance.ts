@@ -8,6 +8,7 @@ import { parseMoneyToCents } from "@/lib/admin/format";
 import { requireAdminSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ensureAdminReady } from "@/lib/db/ensure";
+import { firstReturned } from "@/lib/db/result";
 import { payables, projects, receivables } from "@/lib/db/schema";
 
 const financeStatus = z.enum(["pending", "paid", "overdue", "cancelled"]);
@@ -91,7 +92,8 @@ export async function createReceivableAction(formData: FormData) {
   await ensureAdminReady();
   const values = receivableValues(formData);
   const timestamp = new Date().toISOString();
-  const [entry] = await db
+  const entry = firstReturned(
+    await db
     .insert(receivables)
     .values({
       ...values,
@@ -99,7 +101,8 @@ export async function createReceivableAction(formData: FormData) {
       createdAt: timestamp,
       updatedAt: timestamp,
     })
-    .returning();
+      .returning(),
+  );
 
   await syncProjectPaidCents(entry.projectId);
   await logActivity({
@@ -124,7 +127,8 @@ export async function updateReceivableAction(formData: FormData) {
   }
 
   const values = receivableValues(formData);
-  const [entry] = await db
+  const entry = firstReturned(
+    await db
     .update(receivables)
     .set({
       ...values,
@@ -135,7 +139,8 @@ export async function updateReceivableAction(formData: FormData) {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(receivables.id, id))
-    .returning();
+      .returning(),
+  );
 
   await syncProjectPaidCents(entry.projectId);
   await logActivity({
@@ -154,7 +159,8 @@ export async function markReceivablePaidAction(formData: FormData) {
   const session = await requireAdminSession();
   await ensureAdminReady();
   const id = Number(formData.get("id"));
-  const [entry] = await db
+  const entry = firstReturned(
+    await db
     .update(receivables)
     .set({
       status: "paid",
@@ -162,7 +168,8 @@ export async function markReceivablePaidAction(formData: FormData) {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(receivables.id, id))
-    .returning();
+      .returning(),
+  );
 
   await syncProjectPaidCents(entry.projectId);
   await logActivity({
@@ -182,7 +189,8 @@ export async function createPayableAction(formData: FormData) {
   await ensureAdminReady();
   const values = payableValues(formData);
   const timestamp = new Date().toISOString();
-  const [entry] = await db
+  const entry = firstReturned(
+    await db
     .insert(payables)
     .values({
       ...values,
@@ -190,7 +198,8 @@ export async function createPayableAction(formData: FormData) {
       createdAt: timestamp,
       updatedAt: timestamp,
     })
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,
@@ -207,7 +216,8 @@ export async function markPayablePaidAction(formData: FormData) {
   const session = await requireAdminSession();
   await ensureAdminReady();
   const id = Number(formData.get("id"));
-  const [entry] = await db
+  const entry = firstReturned(
+    await db
     .update(payables)
     .set({
       status: "paid",
@@ -215,7 +225,8 @@ export async function markPayablePaidAction(formData: FormData) {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(payables.id, id))
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,

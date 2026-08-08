@@ -9,6 +9,7 @@ import { parseMoneyToCents, todayDateInput } from "@/lib/admin/format";
 import { requireAdminSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { ensureAdminReady } from "@/lib/db/ensure";
+import { firstReturned } from "@/lib/db/result";
 import {
   documentCounters,
   documentInstallments,
@@ -172,7 +173,8 @@ export async function createDocumentAction(formData: FormData) {
   await ensureAdminReady();
   const values = collectDocumentValues(formData);
   const timestamp = new Date().toISOString();
-  const [document] = await db
+  const document = firstReturned(
+    await db
     .insert(documents)
     .values({
       clientId: values.clientId,
@@ -188,7 +190,8 @@ export async function createDocumentAction(formData: FormData) {
       createdAt: timestamp,
       updatedAt: timestamp,
     })
-    .returning();
+      .returning(),
+  );
 
   await replaceDocumentChildren(document.id, values);
   await logActivity({
@@ -213,7 +216,8 @@ export async function updateDocumentAction(formData: FormData) {
   }
 
   const values = collectDocumentValues(formData);
-  const [document] = await db
+  const document = firstReturned(
+    await db
     .update(documents)
     .set({
       clientId: values.clientId,
@@ -227,7 +231,8 @@ export async function updateDocumentAction(formData: FormData) {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(documents.id, id))
-    .returning();
+      .returning(),
+  );
 
   await replaceDocumentChildren(id, values);
   await logActivity({
@@ -270,7 +275,8 @@ export async function approveDocumentAction(formData: FormData) {
     .from(documentInstallments)
     .where(eq(documentInstallments.documentId, id));
   const timestamp = new Date().toISOString();
-  const [project] = await db
+  const project = firstReturned(
+    await db
     .insert(projects)
     .values({
       clientId: document.clientId,
@@ -285,10 +291,12 @@ export async function approveDocumentAction(formData: FormData) {
       createdAt: timestamp,
       updatedAt: timestamp,
     })
-    .returning();
+      .returning(),
+  );
 
   for (const installment of installments) {
-    const [entry] = await db
+    const entry = firstReturned(
+      await db
       .insert(receivables)
       .values({
         clientId: document.clientId,
@@ -301,7 +309,8 @@ export async function approveDocumentAction(formData: FormData) {
         createdAt: timestamp,
         updatedAt: timestamp,
       })
-      .returning();
+        .returning(),
+    );
 
     await db
       .update(documentInstallments)
@@ -338,11 +347,13 @@ export async function cancelDocumentAction(formData: FormData) {
   const session = await requireAdminSession();
   await ensureAdminReady();
   const id = Number(formData.get("id"));
-  const [document] = await db
+  const document = firstReturned(
+    await db
     .update(documents)
     .set({ status: "cancelled", updatedAt: new Date().toISOString() })
     .where(eq(documents.id, id))
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,

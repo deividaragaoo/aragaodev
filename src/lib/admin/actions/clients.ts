@@ -7,6 +7,7 @@ import { z } from "zod";
 import { logActivity } from "@/lib/admin/activity";
 import { db } from "@/lib/db";
 import { ensureAdminReady } from "@/lib/db/ensure";
+import { firstReturned } from "@/lib/db/result";
 import { clients } from "@/lib/db/schema";
 import { requireAdminSession } from "@/lib/auth/session";
 
@@ -39,14 +40,16 @@ export async function createClientAction(formData: FormData) {
   await ensureAdminReady();
   const values = clientValues(formData);
   const timestamp = new Date().toISOString();
-  const [client] = await db
+  const client = firstReturned(
+    await db
     .insert(clients)
     .values({
       ...values,
       createdAt: timestamp,
       updatedAt: timestamp,
     })
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,
@@ -70,14 +73,16 @@ export async function updateClientAction(formData: FormData) {
   }
 
   const values = clientValues(formData);
-  const [client] = await db
+  const client = firstReturned(
+    await db
     .update(clients)
     .set({
       ...values,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(clients.id, id))
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,
@@ -100,11 +105,13 @@ export async function archiveClientAction(formData: FormData) {
     throw new Error("Cliente invalido.");
   }
 
-  const [client] = await db
+  const client = firstReturned(
+    await db
     .update(clients)
     .set({ status: "archived", updatedAt: new Date().toISOString() })
     .where(eq(clients.id, id))
-    .returning();
+      .returning(),
+  );
 
   await logActivity({
     session,
