@@ -8,36 +8,36 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/configuracoes", label: "Configuracoes" },
 ];
 
-export const CLIENT_STATUS_LABEL = {
+export const CLIENT_STATUS_LABEL: Record<string, string> = {
   active: "Ativo",
   archived: "Arquivado",
-} as const;
+};
 
-export const PROJECT_STATUS_LABEL = {
+export const PROJECT_STATUS_LABEL: Record<string, string> = {
   planning: "Planejamento",
   active: "Em andamento",
   paused: "Pausado",
   completed: "Concluido",
   cancelled: "Cancelado",
-} as const;
+};
 
-export const FINANCE_STATUS_LABEL = {
+export const FINANCE_STATUS_LABEL: Record<string, string> = {
   pending: "Pendente",
   paid: "Pago",
   overdue: "Vencido",
   cancelled: "Cancelado",
-} as const;
+};
 
-export const DOCUMENT_STATUS_LABEL = {
+export const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   draft: "Rascunho",
   approved: "Aprovado",
   cancelled: "Cancelado",
-} as const;
+};
 
-export const DOCUMENT_TYPE_LABEL = {
+export const DOCUMENT_TYPE_LABEL: Record<string, string> = {
   estimate: "Orcamento",
   invoice: "Fatura",
-} as const;
+};
 
 export const STATUS_BADGE_CLASS: Record<string, string> = {
   active: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
