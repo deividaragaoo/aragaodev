@@ -211,12 +211,47 @@ async function needsSchemaReset() {
   return false;
 }
 
-async function ensureProjectProgressColumn() {
-  if (!(await tableExists("projects"))) return;
-  if (await tableHasColumn("projects", "progress")) return;
+async function ensureColumn(
+  table: string,
+  column: string,
+  definition: string
+) {
+  if (!(await tableExists(table))) return;
+  if (await tableHasColumn(table, column)) return;
   await dbClient.execute(
-    `ALTER TABLE projects ADD COLUMN progress INTEGER NOT NULL DEFAULT 0`
+    `ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`
   );
+}
+
+async function ensureSchemaMigrations() {
+  await ensureColumn("projects", "progress", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn("payables", "recurrence", "TEXT DEFAULT 'unica'");
+
+  // Old preview documents schema is incompatible with the current app.
+  if (
+    (await tableExists("documents")) &&
+    ((await tableHasColumn("documents", "title")) ||
+      !(await tableHasColumn("documents", "delivery_deadline")))
+  ) {
+    await dbClient.executeMultiple(`
+PRAGMA foreign_keys = OFF;
+DROP TABLE IF EXISTS document_installments;
+DROP TABLE IF EXISTS document_items;
+DROP TABLE IF EXISTS document_counters;
+DROP TABLE IF EXISTS documents;
+PRAGMA foreign_keys = ON;
+`);
+  }
+
+  // Normalize activity log table name if an older alias exists alone.
+  if (
+    !(await tableExists("activity_log")) &&
+    (await tableExists("activity_logs"))
+  ) {
+    await dbClient.execute(
+      `ALTER TABLE activity_logs RENAME TO activity_log`
+    );
+  }
 }
 
 export async function persistAdminDb() {
@@ -262,8 +297,8 @@ async function ensureSchemaAndSeed() {
     await dbClient.executeMultiple(RESET_SQL);
   }
 
+  await ensureSchemaMigrations();
   await dbClient.executeMultiple(CREATE_SQL);
-  await ensureProjectProgressColumn();
 
   const username = (process.env.ADMIN_USERNAME || "deividaragaoo").trim();
   const password = process.env.ADMIN_PASSWORD || "Aragao212054@";
