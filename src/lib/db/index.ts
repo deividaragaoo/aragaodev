@@ -1,5 +1,5 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import { createClient, type Client } from "@libsql/client";
+import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -25,10 +25,44 @@ function resolveDbUrl() {
   return `file:${getLocalDbPath()}`;
 }
 
-const client = createClient({
+type AppSchema = typeof schema;
+
+let client: Client = createClient({
   url: resolveDbUrl(),
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-export const db = drizzle(client, { schema });
-export { client as dbClient };
+let dbInstance: LibSQLDatabase<AppSchema> = drizzle(client, { schema });
+
+/** Re-open local SQLite after replacing the file from a remote snapshot. */
+export function reopenLocalDb() {
+  if (process.env.TURSO_DATABASE_URL) {
+    return;
+  }
+
+  try {
+    client.close();
+  } catch {
+    // ignore close errors on fresh clients
+  }
+
+  client = createClient({
+    url: resolveDbUrl(),
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+  dbInstance = drizzle(client, { schema });
+}
+
+export const db = new Proxy({} as LibSQLDatabase<AppSchema>, {
+  get(_target, prop, receiver) {
+    const value = Reflect.get(dbInstance as object, prop, receiver);
+    return typeof value === "function" ? value.bind(dbInstance) : value;
+  },
+});
+
+export const dbClient = new Proxy({} as Client, {
+  get(_target, prop, receiver) {
+    const value = Reflect.get(client as object, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});

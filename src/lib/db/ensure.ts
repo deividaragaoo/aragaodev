@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { hashSecret } from "@/lib/auth/password";
-import { db, dbClient, getLocalDbPath } from "@/lib/db";
+import { db, dbClient, getLocalDbPath, reopenLocalDb } from "@/lib/db";
 import {
   hasDurableDb,
   pullDbFromBlob,
@@ -11,6 +11,9 @@ import {
 import { adminUsers, companySettings } from "@/lib/db/schema";
 
 let readyPromise: Promise<void> | null = null;
+let syncPromise: Promise<void> | null = null;
+let lastSyncAt = 0;
+const SYNC_THROTTLE_MS = 750;
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS admin_users (
@@ -209,28 +212,50 @@ async function ensureProjectProgressColumn() {
 export async function persistAdminDb() {
   // Turso is already remote-durable; local/tmp SQLite needs a snapshot push.
   if (process.env.TURSO_DATABASE_URL) return;
+  try {
+    await dbClient.execute("PRAGMA wal_checkpoint(FULL)");
+  } catch {
+    // local file may not be in WAL mode
+  }
   await pushDbToBlob(getLocalDbPath());
+  lastSyncAt = Date.now();
+}
+
+async function syncRemoteSnapshot() {
+  if (process.env.TURSO_DATABASE_URL) return;
+  if (!hasDurableDb()) return;
+
+  const now = Date.now();
+  if (syncPromise && now - lastSyncAt < SYNC_THROTTLE_MS) {
+    await syncPromise;
+    return;
+  }
+
+  syncPromise = (async () => {
+    const localPath = getLocalDbPath();
+    await pullDbFromBlob(localPath);
+    reopenLocalDb();
+    lastSyncAt = Date.now();
+  })().finally(() => {
+    // keep last resolved promise for short throttle joins
+  });
+
+  await syncPromise;
 }
 
 export async function ensureAdminReady() {
+  if (!process.env.VERCEL && !process.env.TURSO_DATABASE_URL) {
+    const dataDir = path.join(process.cwd(), "data");
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+  }
+
+  // Keep serverless instances aligned with the durable snapshot.
+  await syncRemoteSnapshot();
+
   if (!readyPromise) {
     readyPromise = (async () => {
-      if (!process.env.TURSO_DATABASE_URL) {
-        const localPath = getLocalDbPath();
-        if (!process.env.VERCEL) {
-          const dataDir = path.join(process.cwd(), "data");
-          if (!fs.existsSync(dataDir)) {
-            fs.mkdirSync(dataDir, { recursive: true });
-          }
-        }
-
-        // Restore durable SQLite snapshot on cold starts (Vercel /tmp is ephemeral).
-        if (hasDurableDb()) {
-          // Prefer remote snapshot when available so every instance shares state.
-          await pullDbFromBlob(localPath);
-        }
-      }
-
       if (await needsSchemaReset()) {
         await dbClient.executeMultiple(RESET_SQL);
       }
@@ -246,6 +271,7 @@ export async function ensureAdminReady() {
       const passwordHash = await hashSecret(password);
       const keywordHash = await hashSecret(keyword);
       const now = new Date().toISOString();
+      let dirty = false;
 
       // Keep the configured admin credentials in sync on every boot.
       const existingUsers = await db.select().from(adminUsers);
@@ -262,6 +288,7 @@ export async function ensureAdminReady() {
           createdAt: now,
           updatedAt: now,
         });
+        dirty = true;
       } else {
         await db
           .update(adminUsers)
@@ -272,6 +299,7 @@ export async function ensureAdminReady() {
             updatedAt: now,
           })
           .where(eq(adminUsers.id, matched.id));
+        dirty = true;
       }
 
       const settings = await db.query.companySettings.findFirst();
@@ -285,9 +313,12 @@ export async function ensureAdminReady() {
           website: "https://aragaodev.com",
           logoPath: "/brand/aragaodev-logo.png",
         });
+        dirty = true;
       }
 
-      await persistAdminDb();
+      if (dirty) {
+        await persistAdminDb();
+      }
     })().catch((error) => {
       readyPromise = null;
       throw error;
