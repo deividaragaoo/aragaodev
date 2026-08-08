@@ -25,6 +25,7 @@ export async function updateCompanySettingsAction(formData: FormData) {
     website: String(formData.get("website") || "").trim() || null,
     bankInfo: String(formData.get("bankInfo") || "").trim() || null,
     logoPath: String(formData.get("logoPath") || "/brand/aragaodev-logo.png").trim(),
+    showLogoOnDocuments: formData.get("showLogoOnDocuments") === "1" ? 1 : 0,
     updatedAt: new Date().toISOString(),
   };
 
