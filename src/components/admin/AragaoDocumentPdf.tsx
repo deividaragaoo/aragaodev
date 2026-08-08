@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   signatures: {
     marginTop: 36,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
   },
   signBox: {
     width: "45%",
@@ -425,9 +425,6 @@ export function AragaoDocumentPdf({
           <View style={styles.signatures}>
             <View style={styles.signBox}>
               <Text>{company.name}</Text>
-            </View>
-            <View style={styles.signBox}>
-              <Text>{doc.client.name}</Text>
             </View>
           </View>
         ) : null}

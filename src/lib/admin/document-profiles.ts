@@ -86,7 +86,7 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
     contrato: {
       ...COMMERCIAL_BASE,
       description:
-        "Acordo formal: objeto, pagamento, prazos, garantia, cláusulas e assinaturas.",
+        "Acordo formal: objeto, pagamento, prazos, garantia, cláusulas e sua assinatura.",
       showValidUntil: false,
       showTrackPayments: true,
       showSignatures: true,
@@ -102,7 +102,7 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
     },
     recibo: {
       description:
-        "Comprova recebimento de valor. Só cliente, valor, forma e referência.",
+        "Comprova recebimento de valor: cliente, valor, forma, referência e sua assinatura.",
       showServices: true,
       showServicePricing: true,
       showServiceDescription: false,
@@ -131,7 +131,7 @@ export const DOCUMENT_TYPE_PROFILES: Record<DocumentType, DocumentTypeProfile> =
     },
     termo: {
       description:
-        "Termo de serviço/aceite: foco no texto das condições e assinaturas.",
+        "Termo de serviço/aceite: foco no texto das condições e sua assinatura.",
       showServices: true,
       showServicePricing: false,
       showServiceDescription: true,
