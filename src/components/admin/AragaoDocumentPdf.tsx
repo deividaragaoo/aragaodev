@@ -7,6 +7,7 @@ import {
   View,
 } from "@react-pdf/renderer";
 import { DOCUMENT_TYPES } from "@/lib/admin/constants";
+import { getDocumentTypeProfile } from "@/lib/admin/document-profiles";
 
 type PdfDoc = {
   number: string;
@@ -19,6 +20,8 @@ type PdfDoc = {
   conditions?: string | null;
   paymentMethod?: string | null;
   downPayment?: number | null;
+  amountPaid?: number | null;
+  trackPayments?: number | null;
   total: number;
   subtotal: number;
   discount: number;
@@ -124,6 +127,18 @@ const styles = StyleSheet.create({
   colPrice: { width: "16%" },
   colDisc: { width: "16%" },
   colTotal: { width: "16%", textAlign: "right" },
+  colNameWide: { width: "70%" },
+  colTotalWide: { width: "30%", textAlign: "right" },
+  highlight: {
+    marginTop: 16,
+    marginBottom: 8,
+    fontSize: 13,
+    fontFamily: "Helvetica-Bold",
+  },
+  bodyText: {
+    marginTop: 4,
+    lineHeight: 1.5,
+  },
   footer: {
     marginTop: 28,
     borderTop: "1px solid #ddd",
@@ -168,7 +183,15 @@ export function AragaoDocumentPdf({
 }) {
   const typeLabel =
     DOCUMENT_TYPES.find((item) => item.value === doc.type)?.label || doc.type;
+  const profile = getDocumentTypeProfile(doc.type);
   const showLogo = Boolean(company.showLogo && company.logoSrc);
+  const paidValue =
+    doc.amountPaid && doc.amountPaid > 0 ? doc.amountPaid : doc.total;
+  const namedItems = doc.items.filter((item) => item.name);
+  const showPaymentBlock =
+    profile.showPaymentTerms ||
+    profile.showPaidAmount ||
+    (Boolean(doc.trackPayments) && Boolean(doc.paymentMethod));
 
   return (
     <Document>
@@ -201,51 +224,190 @@ export function AragaoDocumentPdf({
         <Text style={styles.sectionTitle}>Cliente</Text>
         <Text>{doc.client.name}</Text>
         {doc.client.company ? <Text>{doc.client.company}</Text> : null}
+        {doc.client.document ? <Text>CPF/CNPJ: {doc.client.document}</Text> : null}
         {doc.client.whatsapp ? <Text>WhatsApp: {doc.client.whatsapp}</Text> : null}
+        {doc.client.email ? <Text>E-mail: {doc.client.email}</Text> : null}
         {doc.client.address ? <Text>Endereço: {doc.client.address}</Text> : null}
 
-        <Text style={styles.sectionTitle}>Serviços</Text>
-        <View style={styles.tableHeader}>
-          <Text style={styles.colName}>Item</Text>
-          <Text style={styles.colQty}>Qtd</Text>
-          <Text style={styles.colPrice}>Valor</Text>
-          <Text style={styles.colDisc}>Desc.</Text>
-          <Text style={styles.colTotal}>Total</Text>
-        </View>
-        {doc.items.map((item, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={styles.colName}>{item.name}</Text>
-            <Text style={styles.colQty}>{item.quantity}</Text>
-            <Text style={styles.colPrice}>{money(item.unitPrice)}</Text>
-            <Text style={styles.colDisc}>{money(item.discount)}</Text>
-            <Text style={styles.colTotal}>{money(item.total)}</Text>
-          </View>
-        ))}
+        {doc.type === "recibo" ? (
+          <>
+            <Text style={styles.highlight}>
+              Recebemos de {doc.client.name} a importância de {money(paidValue)}
+            </Text>
+            <Text style={styles.bodyText}>
+              Forma de pagamento: {doc.paymentMethod || "—"}
+            </Text>
+            {namedItems.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>{profile.labels.services}</Text>
+                {namedItems.map((item, index) => (
+                  <Text key={index} style={styles.bodyText}>
+                    • {item.name}
+                    {item.total > 0 ? ` — ${money(item.total)}` : ""}
+                  </Text>
+                ))}
+              </>
+            ) : null}
+          </>
+        ) : null}
 
-        <View style={{ marginTop: 12 }}>
-          <Text>Subtotal: {money(doc.subtotal)}</Text>
-          <Text>Desconto: {money(doc.discount)}</Text>
-          <Text style={{ fontFamily: "Helvetica-Bold", marginTop: 4 }}>
-            Total: {money(doc.total)}
-          </Text>
-        </View>
+        {doc.type === "comprovante" ? (
+          <>
+            <Text style={styles.highlight}>
+              Comprovamos o pagamento de {money(paidValue)}
+            </Text>
+            <Text style={styles.bodyText}>
+              Forma de pagamento: {doc.paymentMethod || "—"}
+            </Text>
+            <Text style={styles.bodyText}>Data: {date(doc.issueDate)}</Text>
+            {namedItems.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>{profile.labels.services}</Text>
+                {namedItems.map((item, index) => (
+                  <Text key={index} style={styles.bodyText}>
+                    • {item.name}
+                    {item.total > 0 ? ` — ${money(item.total)}` : ""}
+                  </Text>
+                ))}
+              </>
+            ) : null}
+          </>
+        ) : null}
 
-        <Text style={styles.sectionTitle}>Pagamento</Text>
-        <Text>Forma: {doc.paymentMethod || "—"}</Text>
-        <Text>Entrada: {money(doc.downPayment || 0)}</Text>
-        {doc.installments.map((installment) => (
-          <Text key={installment.number}>
-            Parcela {installment.number}: {money(installment.amount)} — venc.{" "}
-            {date(installment.dueDate)}
-          </Text>
-        ))}
+        {doc.type === "termo" ? (
+          <>
+            {namedItems.length > 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>{profile.labels.services}</Text>
+                {namedItems.map((item, index) => (
+                  <View key={index} style={{ marginBottom: 6 }}>
+                    <Text>• {item.name}</Text>
+                    {profile.printItemDescriptions && item.description ? (
+                      <Text style={styles.bodyText}>{item.description}</Text>
+                    ) : null}
+                  </View>
+                ))}
+              </>
+            ) : null}
+            {doc.conditions ? (
+              <>
+                <Text style={styles.sectionTitle}>
+                  {profile.labels.conditions}
+                </Text>
+                <Text style={styles.bodyText}>{doc.conditions}</Text>
+              </>
+            ) : null}
+          </>
+        ) : null}
 
-        <Text style={styles.sectionTitle}>Condições</Text>
-        <Text>Validade: {date(doc.validUntil)}</Text>
-        <Text>Prazo de entrega: {date(doc.deliveryDeadline)}</Text>
-        <Text>Garantia: {doc.warranty || "—"}</Text>
-        {doc.notes ? <Text>Observações: {doc.notes}</Text> : null}
-        {doc.conditions ? <Text>Condições: {doc.conditions}</Text> : null}
+        {profile.showServices &&
+        profile.showServicePricing &&
+        doc.type !== "recibo" &&
+        doc.type !== "comprovante" ? (
+          <>
+            <Text style={styles.sectionTitle}>{profile.labels.services}</Text>
+            <View style={styles.tableHeader}>
+              <Text style={styles.colName}>Item</Text>
+              <Text style={styles.colQty}>Qtd</Text>
+              <Text style={styles.colPrice}>Valor</Text>
+              <Text style={styles.colDisc}>Desc.</Text>
+              <Text style={styles.colTotal}>Total</Text>
+            </View>
+            {doc.items.map((item, index) => (
+              <View key={index}>
+                <View style={styles.tableRow}>
+                  <Text style={styles.colName}>{item.name}</Text>
+                  <Text style={styles.colQty}>{item.quantity}</Text>
+                  <Text style={styles.colPrice}>{money(item.unitPrice)}</Text>
+                  <Text style={styles.colDisc}>{money(item.discount)}</Text>
+                  <Text style={styles.colTotal}>{money(item.total)}</Text>
+                </View>
+                {profile.printItemDescriptions && item.description ? (
+                  <Text style={{ ...styles.bodyText, marginBottom: 4, color: "#555" }}>
+                    {item.description}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
+
+            <View style={{ marginTop: 12 }}>
+              <Text>Subtotal: {money(doc.subtotal)}</Text>
+              {doc.discount > 0 ? (
+                <Text>Desconto: {money(doc.discount)}</Text>
+              ) : null}
+              <Text style={{ fontFamily: "Helvetica-Bold", marginTop: 4 }}>
+                Total: {money(doc.total)}
+              </Text>
+            </View>
+          </>
+        ) : null}
+
+        {showPaymentBlock &&
+        doc.type !== "recibo" &&
+        doc.type !== "comprovante" ? (
+          <>
+            <Text style={styles.sectionTitle}>Pagamento</Text>
+            <Text>Forma: {doc.paymentMethod || "—"}</Text>
+            {profile.showInstallmentPlan ? (
+              <>
+                <Text>Entrada: {money(doc.downPayment || 0)}</Text>
+                {doc.installments.map((installment) => (
+                  <Text key={installment.number}>
+                    Parcela {installment.number}: {money(installment.amount)} —
+                    venc. {date(installment.dueDate)}
+                  </Text>
+                ))}
+              </>
+            ) : null}
+          </>
+        ) : null}
+
+        {(profile.showValidUntil ||
+          profile.showDeliveryDeadline ||
+          profile.showWarranty ||
+          (profile.showConditions &&
+            doc.conditions &&
+            doc.type !== "termo") ||
+          (profile.showNotes && doc.notes)) &&
+        doc.type !== "recibo" &&
+        doc.type !== "comprovante" ? (
+          <>
+            <Text style={styles.sectionTitle}>
+              {doc.type === "contrato" ? "Condições contratuais" : "Condições"}
+            </Text>
+            {profile.showValidUntil ? (
+              <Text>
+                {profile.labels.validUntil}: {date(doc.validUntil)}
+              </Text>
+            ) : null}
+            {profile.showDeliveryDeadline ? (
+              <Text>Prazo de entrega: {date(doc.deliveryDeadline)}</Text>
+            ) : null}
+            {profile.showWarranty ? (
+              <Text>Garantia: {doc.warranty || "—"}</Text>
+            ) : null}
+            {profile.showNotes && doc.notes ? (
+              <Text style={styles.bodyText}>
+                {profile.labels.notes}: {doc.notes}
+              </Text>
+            ) : null}
+            {profile.showConditions &&
+            doc.conditions &&
+            doc.type !== "termo" ? (
+              <Text style={styles.bodyText}>
+                {profile.labels.conditions}: {doc.conditions}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+
+        {(doc.type === "recibo" || doc.type === "comprovante") &&
+        doc.notes ? (
+          <>
+            <Text style={styles.sectionTitle}>{profile.labels.notes}</Text>
+            <Text style={styles.bodyText}>{doc.notes}</Text>
+          </>
+        ) : null}
 
         <View style={styles.footer}>
           <Text>{company.name}</Text>
@@ -254,10 +416,12 @@ export function AragaoDocumentPdf({
               .filter(Boolean)
               .join(" · ")}
           </Text>
-          {company.bankInfo ? <Text>Dados bancários: {company.bankInfo}</Text> : null}
+          {profile.showBankInfo && company.bankInfo ? (
+            <Text>Dados bancários: {company.bankInfo}</Text>
+          ) : null}
         </View>
 
-        {(doc.type === "contrato" || doc.type === "recibo") && (
+        {profile.showSignatures ? (
           <View style={styles.signatures}>
             <View style={styles.signBox}>
               <Text>{company.name}</Text>
@@ -266,7 +430,7 @@ export function AragaoDocumentPdf({
               <Text>{doc.client.name}</Text>
             </View>
           </View>
-        )}
+        ) : null}
       </Page>
     </Document>
   );
