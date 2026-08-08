@@ -16,41 +16,60 @@ const projectSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   value: z.coerce.number().nonnegative(),
+  amountPaid: z.coerce.number().nonnegative(),
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
   status: z.string().min(1),
-  progress: z.coerce.number().min(0).max(100),
   notes: z.string().optional(),
 });
 
-function clampProgress(value: number) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(100, Math.max(0, Math.round(value)));
+function clampMoney(value: number) {
+  if (!Number.isFinite(value) || value < 0) return 0;
+  return Math.round(value * 100) / 100;
+}
+
+function paymentProgress(value: number, amountPaid: number) {
+  if (value <= 0) return amountPaid > 0 ? 100 : 0;
+  return Math.min(100, Math.max(0, Math.round((amountPaid / value) * 100)));
 }
 
 function formValues(formData: FormData) {
+  const value = clampMoney(parseMoney(String(formData.get("value") || "0")));
+  const amountPaid = clampMoney(
+    Math.min(value, parseMoney(String(formData.get("amountPaid") || "0")))
+  );
+
   return {
     clientId: formData.get("clientId"),
     name: String(formData.get("name") || "").trim(),
     description: String(formData.get("description") || "").trim() || undefined,
-    value: parseMoney(String(formData.get("value") || "0")),
+    value,
+    amountPaid,
     startDate: String(formData.get("startDate") || "").trim() || undefined,
     dueDate: String(formData.get("dueDate") || "").trim() || undefined,
     status: String(formData.get("status") || "orcamento"),
-    progress: clampProgress(Number(formData.get("progress") || 0)),
     notes: String(formData.get("notes") || "").trim() || undefined,
   };
+}
+
+function revalidateProjectPaths(id?: number) {
+  revalidatePath("/admin/projetos");
+  revalidatePath("/admin/clientes");
+  revalidatePath("/admin");
+  if (id) revalidatePath(`/admin/projetos/${id}`);
 }
 
 export async function createProjectAction(formData: FormData) {
   await requireSession();
   await ensureAdminReady();
   const parsed = projectSchema.parse(formValues(formData));
+  const progress = paymentProgress(parsed.value, parsed.amountPaid);
 
   const [row] = await db
     .insert(projects)
     .values({
       ...parsed,
+      progress,
       updatedAt: new Date().toISOString(),
     })
     .returning({ id: projects.id });
@@ -63,9 +82,7 @@ export async function createProjectAction(formData: FormData) {
   });
 
   await persistAdminDb();
-  revalidatePath("/admin/projetos");
-  revalidatePath("/admin/clientes");
-  revalidatePath("/admin");
+  revalidateProjectPaths(row.id);
   redirect("/admin/projetos");
 }
 
@@ -73,10 +90,15 @@ export async function updateProjectAction(id: number, formData: FormData) {
   await requireSession();
   await ensureAdminReady();
   const parsed = projectSchema.parse(formValues(formData));
+  const progress = paymentProgress(parsed.value, parsed.amountPaid);
 
   await db
     .update(projects)
-    .set({ ...parsed, updatedAt: new Date().toISOString() })
+    .set({
+      ...parsed,
+      progress,
+      updatedAt: new Date().toISOString(),
+    })
     .where(eq(projects.id, id));
 
   await logActivity({
@@ -87,13 +109,43 @@ export async function updateProjectAction(id: number, formData: FormData) {
   });
 
   await persistAdminDb();
-  revalidatePath("/admin/projetos");
-  revalidatePath(`/admin/projetos/${id}`);
-  revalidatePath("/admin/clientes");
-  revalidatePath("/admin");
+  revalidateProjectPaths(id);
   redirect("/admin/projetos");
 }
 
+export async function updateProjectPaidAction(id: number, amountPaid: number) {
+  await requireSession();
+  await ensureAdminReady();
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, id),
+  });
+  if (!project) return;
+
+  const paid = clampMoney(Math.min(project.value || 0, amountPaid));
+  const progress = paymentProgress(project.value || 0, paid);
+
+  await db
+    .update(projects)
+    .set({
+      amountPaid: paid,
+      progress,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(projects.id, id));
+
+  await logActivity({
+    action: "Pagamento do projeto atualizado",
+    entityType: "project",
+    entityId: id,
+    details: `${project.name || `#${id}`} → pago ${paid}`,
+  });
+
+  await persistAdminDb();
+  revalidateProjectPaths(id);
+}
+
+/** @deprecated use updateProjectPaidAction */
 export async function updateProjectProgressAction(
   id: number,
   progress: number
@@ -101,37 +153,14 @@ export async function updateProjectProgressAction(
   await requireSession();
   await ensureAdminReady();
 
-  const value = clampProgress(progress);
   const project = await db.query.projects.findFirst({
     where: eq(projects.id, id),
   });
+  if (!project) return;
 
-  await db
-    .update(projects)
-    .set({
-      progress: value,
-      status:
-        value >= 100
-          ? "concluido"
-          : project?.status === "concluido"
-            ? "em_desenvolvimento"
-            : project?.status || "em_desenvolvimento",
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(projects.id, id));
-
-  await logActivity({
-    action: "Andamento do projeto atualizado",
-    entityType: "project",
-    entityId: id,
-    details: `${project?.name || `#${id}`} → ${value}%`,
-  });
-
-  await persistAdminDb();
-  revalidatePath("/admin/projetos");
-  revalidatePath(`/admin/projetos/${id}`);
-  revalidatePath("/admin");
-  revalidatePath("/admin/clientes");
+  const pct = Math.min(100, Math.max(0, Math.round(progress)));
+  const paid = clampMoney(((project.value || 0) * pct) / 100);
+  await updateProjectPaidAction(id, paid);
 }
 
 export async function deleteProjectAction(id: number) {
@@ -152,8 +181,6 @@ export async function deleteProjectAction(id: number) {
   });
 
   await persistAdminDb();
-  revalidatePath("/admin/projetos");
-  revalidatePath("/admin/clientes");
-  revalidatePath("/admin");
+  revalidateProjectPaths();
   redirect("/admin/projetos");
 }

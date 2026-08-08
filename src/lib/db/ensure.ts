@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS projects (
   name TEXT NOT NULL,
   description TEXT,
   value REAL NOT NULL DEFAULT 0,
+  amount_paid REAL NOT NULL DEFAULT 0,
   start_date TEXT,
   due_date TEXT,
   status TEXT NOT NULL DEFAULT 'orcamento',
@@ -225,6 +226,7 @@ async function ensureColumn(
 
 async function ensureSchemaMigrations() {
   await ensureColumn("projects", "progress", "INTEGER NOT NULL DEFAULT 0");
+  await ensureColumn("projects", "amount_paid", "REAL NOT NULL DEFAULT 0");
   await ensureColumn("payables", "recurrence", "TEXT DEFAULT 'unica'");
 
   // Old preview documents schema is incompatible with the current app.

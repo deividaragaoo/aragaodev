@@ -91,7 +91,8 @@ export default async function ProjetosPage({
                   <div className="mt-4">
                     <ProjectProgress
                       projectId={project.id}
-                      progress={project.progress || 0}
+                      value={project.value || 0}
+                      amountPaid={project.amountPaid || 0}
                       editable
                     />
                   </div>

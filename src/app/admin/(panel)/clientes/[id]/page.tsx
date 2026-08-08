@@ -105,7 +105,10 @@ export default async function ClienteDetalhePage({
                   />
                 </div>
                 <div className="mt-3">
-                  <ProjectProgress progress={project.progress || 0} />
+                  <ProjectProgress
+                    value={project.value || 0}
+                    amountPaid={project.amountPaid || 0}
+                  />
                 </div>
               </div>
             ))

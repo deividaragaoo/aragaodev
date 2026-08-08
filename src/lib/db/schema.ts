@@ -57,6 +57,7 @@ export const projects = sqliteTable("projects", {
   name: text("name").notNull(),
   description: text("description"),
   value: real("value").notNull().default(0),
+  amountPaid: real("amount_paid").notNull().default(0),
   startDate: text("start_date"),
   dueDate: text("due_date"),
   status: text("status").notNull().default("orcamento"),

@@ -174,6 +174,11 @@ export async function approveDocumentAsProjectAction(documentId: number) {
     doc.items[0]?.name ||
     `${DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "Projeto"} ${doc.number}`;
 
+  const downPayment = doc.downPayment || 0;
+  const paid = Math.min(doc.total || 0, downPayment || 0);
+  const progress =
+    doc.total > 0 ? Math.min(100, Math.round((paid / doc.total) * 100)) : 0;
+
   const [project] = await db
     .insert(projects)
     .values({
@@ -181,17 +186,17 @@ export async function approveDocumentAsProjectAction(documentId: number) {
       name: projectName,
       description: doc.items.map((i) => i.name).join(", "),
       value: doc.total,
+      amountPaid: paid,
       startDate: todayISO(),
       dueDate: doc.deliveryDeadline,
       status: "aprovado",
-      progress: 10,
+      progress,
       documentId: doc.id,
       notes: doc.notes,
       updatedAt: new Date().toISOString(),
     })
     .returning({ id: projects.id });
 
-  const downPayment = doc.downPayment || 0;
   const now = new Date().toISOString();
 
   if (downPayment > 0) {
