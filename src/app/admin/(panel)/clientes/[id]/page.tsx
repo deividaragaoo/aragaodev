@@ -94,7 +94,10 @@ export default async function ClienteDetalhePage({
                   <div>
                     <p className="text-sm font-medium">{project.name}</p>
                     <p className="text-xs text-muted">
-                      {formatCurrency(project.value)} · prazo {formatDate(project.dueDate)}
+                      {formatCurrency(project.value)} · prazo{" "}
+                      {project.dueDate
+                        ? formatDate(project.dueDate)
+                        : "Sem prazo"}
                     </p>
                   </div>
                   <StatusBadge

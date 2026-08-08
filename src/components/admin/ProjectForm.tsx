@@ -47,6 +47,8 @@ export function ProjectForm({
   const [amountPaid, setAmountPaid] = useState(
     clampMoney(Number(initial?.amountPaid ?? 0))
   );
+  const [noDeadline, setNoDeadline] = useState(!initial?.dueDate);
+  const [dueDate, setDueDate] = useState(initial?.dueDate || "");
 
   const remaining = useMemo(
     () => clampMoney(Math.max(0, projectValue - amountPaid)),
@@ -155,12 +157,32 @@ export function ProjectForm({
           defaultValue={initial?.startDate || ""}
         />
       </AdminField>
-      <AdminField label="Prazo">
-        <AdminInput
-          name="dueDate"
-          type="date"
-          defaultValue={initial?.dueDate || ""}
-        />
+      <AdminField label="Prazo final">
+        <input type="hidden" name="dueDate" value={noDeadline ? "" : dueDate} />
+        <div className="space-y-2">
+          <AdminInput
+            type="date"
+            value={noDeadline ? "" : dueDate}
+            disabled={noDeadline}
+            onChange={(e) => {
+              setDueDate(e.target.value);
+              if (e.target.value) setNoDeadline(false);
+            }}
+          />
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={noDeadline}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setNoDeadline(checked);
+                if (checked) setDueDate("");
+              }}
+              className="h-4 w-4 accent-[#ff6b35]"
+            />
+            Sem prazo
+          </label>
+        </div>
       </AdminField>
       <AdminField label="Descrição" className="md:col-span-2">
         <AdminTextarea

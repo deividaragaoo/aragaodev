@@ -105,7 +105,7 @@ export default async function ProjetosPage({
                   </div>
                   <p className="mt-2 text-xs text-muted">
                     Início {formatDate(project.startDate)} · Prazo{" "}
-                    {formatDate(project.dueDate)}
+                    {project.dueDate ? formatDate(project.dueDate) : "Sem prazo"}
                   </p>
                   <div className="mt-4">
                     <Link href={`/admin/projetos/${project.id}`}>
