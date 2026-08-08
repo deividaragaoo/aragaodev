@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
-import { hashSecret } from "@/lib/auth/password";
+import { hashSecret, verifySecret } from "@/lib/auth/password";
 import { db, dbClient, getLocalDbPath, reopenLocalDb } from "@/lib/db";
 import {
   hasDurableDb,
@@ -11,9 +11,19 @@ import {
 import { adminUsers, companySettings } from "@/lib/db/schema";
 
 let readyPromise: Promise<void> | null = null;
-let syncPromise: Promise<void> | null = null;
 let lastSyncAt = 0;
-const SYNC_THROTTLE_MS = 750;
+let gate: Promise<void> = Promise.resolve();
+const SYNC_THROTTLE_MS = 2_000;
+
+async function withDbGate<T>(fn: () => Promise<T>): Promise<T> {
+  const run = gate.then(fn, fn);
+  // Keep the chain alive even when a caller fails.
+  gate = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+}
 
 const CREATE_SQL = `
 CREATE TABLE IF NOT EXISTS admin_users (
@@ -226,104 +236,113 @@ async function syncRemoteSnapshot() {
   if (!hasDurableDb()) return;
 
   const now = Date.now();
-  if (syncPromise && now - lastSyncAt < SYNC_THROTTLE_MS) {
-    await syncPromise;
-    return;
+  if (now - lastSyncAt < SYNC_THROTTLE_MS) return;
+
+  const localPath = getLocalDbPath();
+  const before = fs.existsSync(localPath)
+    ? `${fs.statSync(localPath).size}:${fs.statSync(localPath).mtimeMs}`
+    : "";
+
+  await pullDbFromBlob(localPath);
+
+  const after = fs.existsSync(localPath)
+    ? `${fs.statSync(localPath).size}:${fs.statSync(localPath).mtimeMs}`
+    : "";
+
+  // Only reopen when the snapshot file actually changed (avoids killing live queries).
+  if (before !== after) {
+    reopenLocalDb();
   }
 
-  syncPromise = (async () => {
-    const localPath = getLocalDbPath();
-    await pullDbFromBlob(localPath);
-    reopenLocalDb();
-    lastSyncAt = Date.now();
-  })().finally(() => {
-    // keep last resolved promise for short throttle joins
-  });
-
-  await syncPromise;
+  lastSyncAt = Date.now();
 }
 
-export async function ensureAdminReady() {
-  if (!process.env.VERCEL && !process.env.TURSO_DATABASE_URL) {
-    const dataDir = path.join(process.cwd(), "data");
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+async function ensureSchemaAndSeed() {
+  if (await needsSchemaReset()) {
+    await dbClient.executeMultiple(RESET_SQL);
+  }
+
+  await dbClient.executeMultiple(CREATE_SQL);
+  await ensureProjectProgressColumn();
+
+  const username = (process.env.ADMIN_USERNAME || "deividaragaoo").trim();
+  const password = process.env.ADMIN_PASSWORD || "Aragao212054@";
+  const keyword = process.env.ADMIN_KEYWORD || "deividgostoso";
+  const now = new Date().toISOString();
+  let dirty = false;
+
+  const existingUsers = await db.select().from(adminUsers);
+  const matched =
+    existingUsers.find(
+      (user) => user.username.toLowerCase() === username.toLowerCase()
+    ) || existingUsers[0];
+
+  if (!matched) {
+    await db.insert(adminUsers).values({
+      username,
+      passwordHash: await hashSecret(password),
+      keywordHash: await hashSecret(keyword),
+      createdAt: now,
+      updatedAt: now,
+    });
+    dirty = true;
+  } else {
+    const passwordOk = await verifySecret(password, matched.passwordHash);
+    const keywordOk = await verifySecret(keyword, matched.keywordHash);
+    if (!passwordOk || !keywordOk || matched.username !== username) {
+      await db
+        .update(adminUsers)
+        .set({
+          username,
+          passwordHash: await hashSecret(password),
+          keywordHash: await hashSecret(keyword),
+          updatedAt: now,
+        })
+        .where(eq(adminUsers.id, matched.id));
+      dirty = true;
     }
   }
 
-  // Keep serverless instances aligned with the durable snapshot.
-  await syncRemoteSnapshot();
-
-  if (!readyPromise) {
-    readyPromise = (async () => {
-      if (await needsSchemaReset()) {
-        await dbClient.executeMultiple(RESET_SQL);
-      }
-
-      await dbClient.executeMultiple(CREATE_SQL);
-      await ensureProjectProgressColumn();
-
-      const username = (
-        process.env.ADMIN_USERNAME || "deividaragaoo"
-      ).trim();
-      const password = process.env.ADMIN_PASSWORD || "Aragao212054@";
-      const keyword = process.env.ADMIN_KEYWORD || "deividgostoso";
-      const passwordHash = await hashSecret(password);
-      const keywordHash = await hashSecret(keyword);
-      const now = new Date().toISOString();
-      let dirty = false;
-
-      // Keep the configured admin credentials in sync on every boot.
-      const existingUsers = await db.select().from(adminUsers);
-      const matched =
-        existingUsers.find(
-          (user) => user.username.toLowerCase() === username.toLowerCase()
-        ) || existingUsers[0];
-
-      if (!matched) {
-        await db.insert(adminUsers).values({
-          username,
-          passwordHash,
-          keywordHash,
-          createdAt: now,
-          updatedAt: now,
-        });
-        dirty = true;
-      } else {
-        await db
-          .update(adminUsers)
-          .set({
-            username,
-            passwordHash,
-            keywordHash,
-            updatedAt: now,
-          })
-          .where(eq(adminUsers.id, matched.id));
-        dirty = true;
-      }
-
-      const settings = await db.query.companySettings.findFirst();
-      if (!settings) {
-        await db.insert(companySettings).values({
-          name: "Aragão Dev",
-          tagline: "Sistemas Sob Medida",
-          email: "contato@aragaodev.com",
-          whatsapp: "(79) 98157-5179",
-          instagram: "@aragao_Dev",
-          website: "https://aragaodev.com",
-          logoPath: "/brand/aragaodev-logo.png",
-        });
-        dirty = true;
-      }
-
-      if (dirty) {
-        await persistAdminDb();
-      }
-    })().catch((error) => {
-      readyPromise = null;
-      throw error;
+  const settings = (
+    await db.select().from(companySettings).limit(1)
+  )[0];
+  if (!settings) {
+    await db.insert(companySettings).values({
+      name: "Aragão Dev",
+      tagline: "Sistemas Sob Medida",
+      email: "contato@aragaodev.com",
+      whatsapp: "(79) 98157-5179",
+      instagram: "@aragao_Dev",
+      website: "https://aragaodev.com",
+      logoPath: "/brand/aragaodev-logo.png",
     });
+    dirty = true;
   }
 
-  await readyPromise;
+  if (dirty) {
+    await persistAdminDb();
+  }
+}
+
+export async function ensureAdminReady() {
+  return withDbGate(async () => {
+    if (!process.env.VERCEL && !process.env.TURSO_DATABASE_URL) {
+      const dataDir = path.join(process.cwd(), "data");
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+    }
+
+    // Keep serverless instances aligned with the durable snapshot.
+    await syncRemoteSnapshot();
+
+    if (!readyPromise) {
+      readyPromise = ensureSchemaAndSeed().catch((error) => {
+        readyPromise = null;
+        throw error;
+      });
+    }
+
+    await readyPromise;
+  });
 }

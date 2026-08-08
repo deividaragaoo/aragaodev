@@ -53,16 +53,20 @@ export function reopenLocalDb() {
   dbInstance = drizzle(client, { schema });
 }
 
+function liveGet<T extends object>(target: T, prop: PropertyKey) {
+  // Do not pass the Proxy as receiver — Drizzle getters break on an empty target.
+  const value = Reflect.get(target, prop);
+  return typeof value === "function" ? value.bind(target) : value;
+}
+
 export const db = new Proxy({} as LibSQLDatabase<AppSchema>, {
-  get(_target, prop, receiver) {
-    const value = Reflect.get(dbInstance as object, prop, receiver);
-    return typeof value === "function" ? value.bind(dbInstance) : value;
+  get(_target, prop) {
+    return liveGet(dbInstance as object, prop);
   },
 });
 
 export const dbClient = new Proxy({} as Client, {
-  get(_target, prop, receiver) {
-    const value = Reflect.get(client as object, prop, receiver);
-    return typeof value === "function" ? value.bind(client) : value;
+  get(_target, prop) {
+    return liveGet(client as object, prop);
   },
 });
