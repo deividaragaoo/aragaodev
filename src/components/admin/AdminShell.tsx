@@ -34,10 +34,12 @@ export function AdminShell({
   children,
   username,
   storageWarning = false,
+  claimUrl,
 }: {
   children: React.ReactNode;
   username: string;
   storageWarning?: boolean;
+  claimUrl?: string | null;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -146,6 +148,20 @@ export function AdminShell({
                 Para os clientes e projetos não sumirem na Vercel, configure
                 persistência: `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` ou
                 `BLOB_READ_WRITE_TOKEN` (Vercel Blob).
+              </div>
+            ) : null}
+            {claimUrl ? (
+              <div className="mb-5 rounded-2xl border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-50">
+                Persistência ativa via Neon. Para o banco não expirar em 72h,{" "}
+                <a
+                  href={claimUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium underline underline-offset-2 hover:text-white"
+                >
+                  reivindique o banco na Neon
+                </a>
+                .
               </div>
             ) : null}
             {children}

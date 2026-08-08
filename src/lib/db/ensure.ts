@@ -3,7 +3,11 @@ import fs from "fs";
 import path from "path";
 import { hashSecret } from "@/lib/auth/password";
 import { db, dbClient, getLocalDbPath } from "@/lib/db";
-import { hasDurableBlob, pullDbFromBlob, pushDbToBlob } from "@/lib/db/persist";
+import {
+  hasDurableDb,
+  pullDbFromBlob,
+  pushDbToBlob,
+} from "@/lib/db/persist";
 import { adminUsers, companySettings } from "@/lib/db/schema";
 
 let readyPromise: Promise<void> | null = null;
@@ -203,6 +207,7 @@ async function ensureProjectProgressColumn() {
 }
 
 export async function persistAdminDb() {
+  // Turso is already remote-durable; local/tmp SQLite needs a snapshot push.
   if (process.env.TURSO_DATABASE_URL) return;
   await pushDbToBlob(getLocalDbPath());
 }
@@ -220,9 +225,7 @@ export async function ensureAdminReady() {
         }
 
         // Restore durable SQLite snapshot on cold starts (Vercel /tmp is ephemeral).
-        if (hasDurableBlob() && !fs.existsSync(localPath)) {
-          await pullDbFromBlob(localPath);
-        } else if (hasDurableBlob()) {
+        if (hasDurableDb()) {
           // Prefer remote snapshot when available so every instance shares state.
           await pullDbFromBlob(localPath);
         }
