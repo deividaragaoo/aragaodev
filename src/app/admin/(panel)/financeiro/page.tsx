@@ -61,12 +61,70 @@ export default async function FinanceiroPage() {
 
   const openBalances = balances.filter((item) => item.pending > 0 || item.received > 0);
 
+  const activeProjects = projects.filter((project) => project.status !== "cancelado");
+  const projectsTotal = activeProjects.reduce(
+    (sum, project) => sum + (project.value || 0),
+    0
+  );
+  const projectsReceived = activeProjects.reduce(
+    (sum, project) =>
+      sum + Math.min(project.value || 0, project.amountPaid || 0),
+    0
+  );
+  const projectsRemaining = Math.max(0, projectsTotal - projectsReceived);
+  const projectsPercent =
+    projectsTotal > 0
+      ? Math.min(100, Math.round((projectsReceived / projectsTotal) * 100))
+      : 0;
+
   return (
     <div className="space-y-10">
       <PageHeader
         title="Financeiro"
         description="Contas a receber e contas a pagar."
       />
+
+      <section>
+        <h2 className="mb-4 text-lg font-medium">Total em projetos</h2>
+        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <MiniStat
+            label="Valor total dos projetos"
+            value={formatCurrency(projectsTotal)}
+          />
+          <MiniStat
+            label="Já recebido"
+            value={formatCurrency(projectsReceived)}
+            tone="success"
+          />
+          <MiniStat
+            label="Ainda falta receber"
+            value={formatCurrency(projectsRemaining)}
+            tone={projectsRemaining > 0 ? "warning" : "success"}
+          />
+        </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+            <p className="text-muted">
+              {activeProjects.length} projeto(s) ativo(s)
+            </p>
+            <p className="font-semibold text-[#ff6b35]">{projectsPercent}%</p>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              className={`h-full rounded-full transition-all ${
+                projectsRemaining <= 0
+                  ? "bg-emerald-400"
+                  : "bg-gradient-to-r from-[#ff7a18] to-[#ff3d00]"
+              }`}
+              style={{ width: `${projectsPercent}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            {formatCurrency(projectsReceived)} de {formatCurrency(projectsTotal)}{" "}
+            já recebidos nos projetos atuais
+          </p>
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-4 text-lg font-medium">Contas a receber</h2>
