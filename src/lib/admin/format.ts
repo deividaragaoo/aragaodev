@@ -71,3 +71,30 @@ export function parseMoney(value: string | number) {
   const parsed = Number.parseFloat(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
 }
+
+/** Valor inicial/exibição em inputs monetários (vírgula pt-BR). */
+export function formatMoneyInput(value: number) {
+  if (!Number.isFinite(value)) return "0";
+  const fixed = Math.round(value * 100) / 100;
+  return fixed.toLocaleString("pt-BR", {
+    minimumFractionDigits: Number.isInteger(fixed) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/** Mantém só dígitos e no máximo um separador decimal (, ou .). */
+export function sanitizeMoneyInput(value: string) {
+  const cleaned = value.replace(/[^\d.,]/g, "");
+  const comma = cleaned.indexOf(",");
+  const dot = cleaned.indexOf(".");
+  if (comma === -1 && dot === -1) return cleaned;
+
+  const sepIndex = comma === -1 ? dot : dot === -1 ? comma : Math.min(comma, dot);
+  const sep = cleaned[sepIndex];
+  const intPart = cleaned.slice(0, sepIndex).replace(/[.,]/g, "");
+  const fracPart = cleaned
+    .slice(sepIndex + 1)
+    .replace(/[.,]/g, "")
+    .slice(0, 2);
+  return `${intPart}${sep}${fracPart}`;
+}

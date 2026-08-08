@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { updateDocumentPaymentAction } from "@/lib/admin/actions/documents";
-import { formatCurrency, parseMoney } from "@/lib/admin/format";
+import {
+  formatCurrency,
+  formatMoneyInput,
+  parseMoney,
+  sanitizeMoneyInput,
+} from "@/lib/admin/format";
 import { AdminButton, AdminField, AdminInput } from "@/components/admin/ui";
 
 function clampMoney(value: number) {
@@ -23,7 +28,14 @@ export function DocumentPaymentPanel({
 }) {
   const [open, setOpen] = useState(false);
   const [enabled, setEnabled] = useState(trackPayments === 1);
-  const [paid, setPaid] = useState(clampMoney(amountPaid || 0));
+  const [paidText, setPaidText] = useState(
+    formatMoneyInput(clampMoney(amountPaid || 0))
+  );
+
+  const paid = useMemo(() => {
+    const next = clampMoney(parseMoney(paidText || "0"));
+    return Math.min(total || next, next);
+  }, [paidText, total]);
 
   const remaining = useMemo(
     () => clampMoney(Math.max(0, total - paid)),
@@ -81,24 +93,23 @@ export function DocumentPaymentPanel({
 
           {enabled ? (
             <>
+              <input type="hidden" name="amountPaid" value={paid} />
               <div className="grid gap-3 sm:grid-cols-2">
                 <AdminField label="Valor já pago">
                   <AdminInput
-                    name="amountPaid"
                     inputMode="decimal"
-                    value={String(paid)}
+                    placeholder="0,00"
+                    value={paidText}
                     onChange={(e) =>
-                      setPaid(
-                        Math.min(
-                          total,
-                          clampMoney(parseMoney(e.target.value || "0"))
-                        )
-                      )
+                      setPaidText(sanitizeMoneyInput(e.target.value))
                     }
                   />
                 </AdminField>
                 <AdminField label="Ainda deve">
-                  <AdminInput readOnly value={String(remaining)} />
+                  <AdminInput
+                    readOnly
+                    value={formatMoneyInput(remaining)}
+                  />
                 </AdminField>
               </div>
 
