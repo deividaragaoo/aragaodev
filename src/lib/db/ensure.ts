@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
   website TEXT,
   bank_info TEXT,
   logo_path TEXT DEFAULT '/brand/aragaodev-logo.png',
+  show_logo_on_documents INTEGER NOT NULL DEFAULT 1,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -232,6 +233,11 @@ async function ensureSchemaMigrations() {
   await ensureColumn("documents", "track_payments", "INTEGER NOT NULL DEFAULT 0");
   await ensureColumn("documents", "amount_paid", "REAL NOT NULL DEFAULT 0");
   await ensureColumn("payables", "recurrence", "TEXT DEFAULT 'unica'");
+  await ensureColumn(
+    "company_settings",
+    "show_logo_on_documents",
+    "INTEGER NOT NULL DEFAULT 1"
+  );
 
   // Old preview documents schema is incompatible with the current app.
   if (
@@ -357,6 +363,7 @@ async function ensureSchemaAndSeed() {
       instagram: "@aragao_Dev",
       website: "https://aragaodev.com",
       logoPath: "/brand/aragaodev-logo.png",
+      showLogoOnDocuments: 1,
     });
     dirty = true;
   }

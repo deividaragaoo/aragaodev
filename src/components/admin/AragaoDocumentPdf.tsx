@@ -1,5 +1,6 @@
 import {
   Document,
+  Image,
   Page,
   StyleSheet,
   Text,
@@ -54,6 +55,8 @@ type Company = {
   instagram?: string | null;
   website?: string | null;
   bankInfo?: string | null;
+  logoSrc?: string | null;
+  showLogo?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -67,6 +70,17 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderBottom: "2px solid #ff6b35",
     paddingBottom: 12,
+  },
+  logoBar: {
+    backgroundColor: "#0a0a0a",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    alignItems: "flex-start",
+  },
+  logo: {
+    width: 180,
+    height: 42,
   },
   brand: {
     fontSize: 20,
@@ -154,12 +168,19 @@ export function AragaoDocumentPdf({
 }) {
   const typeLabel =
     DOCUMENT_TYPES.find((item) => item.value === doc.type)?.label || doc.type;
+  const showLogo = Boolean(company.showLogo && company.logoSrc);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.brand}>{company.name || "ARAGÃO DEV"}</Text>
+          {showLogo ? (
+            <View style={styles.logoBar}>
+              <Image src={company.logoSrc!} style={styles.logo} />
+            </View>
+          ) : (
+            <Text style={styles.brand}>{company.name || "ARAGÃO DEV"}</Text>
+          )}
           <Text style={styles.tagline}>
             {company.tagline || "Sistemas Sob Medida"}
           </Text>

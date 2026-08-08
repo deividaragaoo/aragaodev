@@ -26,6 +26,7 @@ export const companySettings = sqliteTable("company_settings", {
   website: text("website"),
   bankInfo: text("bank_info"),
   logoPath: text("logo_path").default("/brand/aragaodev-logo.png"),
+  showLogoOnDocuments: integer("show_logo_on_documents").notNull().default(1),
   updatedAt: text("updated_at")
     .notNull()
     .default(sql`(datetime('now'))`),

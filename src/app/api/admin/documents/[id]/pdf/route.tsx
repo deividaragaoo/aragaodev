@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { AragaoDocumentPdf } from "@/components/admin/AragaoDocumentPdf";
 import { logPdfGeneratedAction } from "@/lib/admin/actions/documents";
+import { resolveLogoDataUri } from "@/lib/admin/logo";
 import { getCompanySettings, getDocumentById } from "@/lib/admin/queries";
 import { getSession } from "@/lib/auth/session";
 
@@ -21,6 +22,10 @@ export async function GET(
   if (!doc || !doc.client) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+
+  const logoPath = company?.logoPath || "/brand/aragaodev-logo.png";
+  const showLogo = (company?.showLogoOnDocuments ?? 1) === 1;
+  const logoSrc = showLogo ? resolveLogoDataUri(logoPath) : null;
 
   const element = (
     <AragaoDocumentPdf
@@ -42,12 +47,19 @@ export async function GET(
         items: doc.items,
         installments: doc.installments,
       }}
-      company={
-        company || {
-          name: "Aragão Dev",
-          tagline: "Sistemas Sob Medida",
-        }
-      }
+      company={{
+        name: company?.name || "Aragão Dev",
+        tagline: company?.tagline || "Sistemas Sob Medida",
+        document: company?.document,
+        address: company?.address,
+        whatsapp: company?.whatsapp,
+        email: company?.email,
+        instagram: company?.instagram,
+        website: company?.website,
+        bankInfo: company?.bankInfo,
+        logoSrc,
+        showLogo: Boolean(logoSrc),
+      }}
     />
   );
 

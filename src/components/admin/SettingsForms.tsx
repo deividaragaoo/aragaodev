@@ -24,6 +24,7 @@ type Settings = {
   website?: string | null;
   bankInfo?: string | null;
   logoPath?: string | null;
+  showLogoOnDocuments?: number | null;
 };
 
 export function SettingsForms({
@@ -75,12 +76,35 @@ export function SettingsForms({
           <AdminField label="Site">
             <AdminInput name="website" defaultValue={settings?.website || ""} />
           </AdminField>
-          <AdminField label="Logo (caminho)">
+          <AdminField
+            label="Logo nos contratos (caminho)"
+            className="md:col-span-2"
+          >
             <AdminInput
               name="logoPath"
               defaultValue={settings?.logoPath || "/brand/aragaodev-logo.png"}
+              placeholder="/brand/aragaodev-logo.png"
             />
+            <p className="mt-1.5 text-xs text-muted">
+              Arquivo em <code className="text-[11px]">public/</code>. Padrão:{" "}
+              <code className="text-[11px]">/brand/aragaodev-logo.png</code>
+            </p>
           </AdminField>
+          <label className="flex cursor-pointer items-start gap-2 text-sm text-muted md:col-span-2">
+            <input
+              type="checkbox"
+              name="showLogoOnDocuments"
+              value="1"
+              defaultChecked={(settings?.showLogoOnDocuments ?? 1) === 1}
+              className="mt-0.5 h-4 w-4 accent-[#ff6b35]"
+            />
+            <span>
+              Exibir logotipo no PDF dos contratos e documentos
+              <span className="mt-0.5 block text-xs">
+                Aparece no topo do PDF, acima dos dados de contato.
+              </span>
+            </span>
+          </label>
           <AdminField label="Endereço" className="md:col-span-2">
             <AdminInput name="address" defaultValue={settings?.address || ""} />
           </AdminField>
