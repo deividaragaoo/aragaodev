@@ -299,6 +299,7 @@ async function ensureSchemaAndSeed() {
     await dbClient.executeMultiple(RESET_SQL);
   }
 
+  // Migrations + CREATE must run on every boot (readyPromise is cached per instance).
   await ensureSchemaMigrations();
   await dbClient.executeMultiple(CREATE_SQL);
 
@@ -372,6 +373,10 @@ export async function ensureAdminReady() {
 
     // Keep serverless instances aligned with the durable snapshot.
     await syncRemoteSnapshot();
+
+    // Always apply additive migrations (idempotent), even on warm instances.
+    await ensureSchemaMigrations();
+    await dbClient.executeMultiple(CREATE_SQL);
 
     if (!readyPromise) {
       readyPromise = ensureSchemaAndSeed().catch((error) => {
