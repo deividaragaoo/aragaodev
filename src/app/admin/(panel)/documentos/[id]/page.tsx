@@ -13,6 +13,7 @@ import {
   deleteDocumentAction,
 } from "@/lib/admin/actions/documents";
 import { DOCUMENT_TYPES } from "@/lib/admin/constants";
+import { getDocumentTypeProfile } from "@/lib/admin/document-profiles";
 import { formatCurrency, formatDate } from "@/lib/admin/format";
 import { getDocumentById } from "@/lib/admin/queries";
 
@@ -29,6 +30,7 @@ export default async function DocumentoDetalhePage({
   const remove = deleteDocumentAction.bind(null, doc.id);
   const typeLabel =
     DOCUMENT_TYPES.find((item) => item.value === doc.type)?.label || doc.type;
+  const profile = getDocumentTypeProfile(doc.type);
 
   return (
     <div className="space-y-6">
@@ -54,24 +56,35 @@ export default async function DocumentoDetalhePage({
         }
       />
 
+      <p className="text-sm text-muted">{profile.description}</p>
+
       <div className="flex flex-wrap gap-2">
         <StatusBadge label={doc.status} tone="info" />
-        <StatusBadge label={formatCurrency(doc.total)} />
+        {profile.showServicePricing || profile.showPaidAmount ? (
+          <StatusBadge
+            label={formatCurrency(
+              profile.showPaidAmount
+                ? doc.amountPaid || doc.total
+                : doc.total
+            )}
+          />
+        ) : null}
       </div>
 
-      {(doc.type === "orcamento" || doc.type === "proposta") &&
-      doc.status !== "aprovado" ? (
+      {profile.canConvertToProject && doc.status !== "aprovado" ? (
         <form action={approve}>
           <AdminButton type="submit">Transformar em Projeto</AdminButton>
         </form>
       ) : null}
 
-      <DocumentPaymentPanel
-        documentId={doc.id}
-        total={doc.total || 0}
-        trackPayments={doc.trackPayments || 0}
-        amountPaid={doc.amountPaid || 0}
-      />
+      {profile.showPaymentPanel ? (
+        <DocumentPaymentPanel
+          documentId={doc.id}
+          total={doc.total || 0}
+          trackPayments={doc.trackPayments || 0}
+          amountPaid={doc.amountPaid || 0}
+        />
+      ) : null}
 
       <div
         className="grid gap-4 lg:grid-cols-2 print:grid-cols-1"
@@ -88,64 +101,92 @@ export default async function DocumentoDetalhePage({
         </AdminCard>
 
         <AdminCard>
-          <h2 className="mb-3 text-sm font-medium">Condições</h2>
+          <h2 className="mb-3 text-sm font-medium">Resumo</h2>
           <div className="space-y-1 text-sm text-muted">
             <p>Emissão: {formatDate(doc.issueDate)}</p>
-            <p>Validade: {formatDate(doc.validUntil)}</p>
-            <p>Entrega: {formatDate(doc.deliveryDeadline)}</p>
-            <p>Garantia: {doc.warranty || "—"}</p>
-            <p>Pagamento: {doc.paymentMethod || "—"}</p>
-            {doc.trackPayments ? (
+            {profile.showValidUntil ? (
+              <p>
+                {profile.labels.validUntil}: {formatDate(doc.validUntil)}
+              </p>
+            ) : null}
+            {profile.showDeliveryDeadline ? (
+              <p>Entrega: {formatDate(doc.deliveryDeadline)}</p>
+            ) : null}
+            {profile.showWarranty ? (
+              <p>Garantia: {doc.warranty || "—"}</p>
+            ) : null}
+            {profile.showPaymentTerms || profile.showPaidAmount ? (
+              <p>Pagamento: {doc.paymentMethod || "—"}</p>
+            ) : null}
+            {profile.showPaidAmount ? (
+              <p>
+                {profile.labels.paidAmount}:{" "}
+                {formatCurrency(doc.amountPaid || doc.total || 0)}
+              </p>
+            ) : null}
+            {profile.showInstallmentPlan && doc.trackPayments ? (
               <p>Entrada: {formatCurrency(doc.downPayment || 0)}</p>
             ) : null}
           </div>
         </AdminCard>
 
-        <AdminCard className="lg:col-span-2">
-          <h2 className="mb-3 text-sm font-medium">Serviços</h2>
-          <div className="space-y-2">
-            {doc.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-1 border-b border-white/[0.05] py-2 last:border-0 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="text-sm font-medium">{item.name}</p>
-                  {item.description ? (
-                    <p className="text-xs text-muted">{item.description}</p>
+        {profile.showServices ? (
+          <AdminCard className="lg:col-span-2">
+            <h2 className="mb-3 text-sm font-medium">
+              {profile.labels.services}
+            </h2>
+            <div className="space-y-2">
+              {doc.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-1 border-b border-white/[0.05] py-2 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{item.name}</p>
+                    {profile.showServiceDescription && item.description ? (
+                      <p className="text-xs text-muted">{item.description}</p>
+                    ) : null}
+                  </div>
+                  {profile.showServicePricing ? (
+                    <p className="text-sm">{formatCurrency(item.total)}</p>
                   ) : null}
                 </div>
-                <p className="text-sm">{formatCurrency(item.total)}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-right text-lg font-semibold">
-            Total: {formatCurrency(doc.total)}
-          </p>
-        </AdminCard>
+              ))}
+            </div>
+            {profile.showServicePricing ? (
+              <p className="mt-4 text-right text-lg font-semibold">
+                Total: {formatCurrency(doc.total)}
+              </p>
+            ) : null}
+          </AdminCard>
+        ) : null}
 
-        {doc.trackPayments && doc.installments.length > 0 ? (
+        {profile.showInstallmentPlan && doc.installments.length > 0 ? (
           <AdminCard className="lg:col-span-2">
             <h2 className="mb-3 text-sm font-medium">Parcelas</h2>
             <div className="space-y-2">
               {doc.installments.map((installment) => (
                 <p key={installment.id} className="text-sm text-muted">
-                  Parcela {installment.number}: {formatCurrency(installment.amount)}{" "}
-                  — {formatDate(installment.dueDate)}
+                  Parcela {installment.number}:{" "}
+                  {formatCurrency(installment.amount)} —{" "}
+                  {formatDate(installment.dueDate)}
                 </p>
               ))}
             </div>
           </AdminCard>
         ) : null}
 
-        {(doc.notes || doc.conditions) && (
+        {((profile.showNotes && doc.notes) ||
+          (profile.showConditions && doc.conditions)) && (
           <AdminCard className="lg:col-span-2">
-            {doc.notes ? (
-              <p className="text-sm text-muted">Observações: {doc.notes}</p>
+            {profile.showNotes && doc.notes ? (
+              <p className="text-sm text-muted">
+                {profile.labels.notes}: {doc.notes}
+              </p>
             ) : null}
-            {doc.conditions ? (
-              <p className="mt-2 text-sm text-muted">
-                Condições: {doc.conditions}
+            {profile.showConditions && doc.conditions ? (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-muted">
+                {profile.labels.conditions}: {doc.conditions}
               </p>
             ) : null}
           </AdminCard>

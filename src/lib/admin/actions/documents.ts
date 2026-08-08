@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/admin/activity";
 import { DOCUMENT_TYPES } from "@/lib/admin/constants";
+import { getDocumentTypeProfile } from "@/lib/admin/document-profiles";
 import {
   isFlexibleDateToken,
   parseMoney,
@@ -96,22 +97,93 @@ export async function createDocumentAction(formData: FormData) {
   await ensureAdminReady();
 
   const type = String(formData.get("type") || "orcamento");
+  const profile = getDocumentTypeProfile(type);
   const clientId = Number(formData.get("clientId"));
-  const items = parseItems(formData);
-  const installments = parseInstallments(formData);
+  let items = parseItems(formData);
+  let installments = profile.showInstallmentPlan
+    ? parseInstallments(formData)
+    : [];
 
-  if (!clientId || items.length === 0) {
-    throw new Error("Cliente e ao menos um serviço são obrigatórios.");
+  if (!clientId) {
+    throw new Error("Cliente é obrigatório.");
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  const discount = items.reduce((sum, item) => sum + item.discount, 0) +
+  if (profile.requireServices && items.length === 0) {
+    throw new Error("Informe ao menos um item para este documento.");
+  }
+
+  if (
+    profile.showConditions &&
+    (type === "termo" || type === "contrato") &&
+    !String(formData.get("conditions") || "").trim()
+  ) {
+    throw new Error("Preencha as condições/cláusulas deste documento.");
+  }
+
+  // Termo pode não ter itens; grava um marcador leve para manter o fluxo.
+  if (!profile.requireServices && items.length === 0) {
+    items = [
+      {
+        name: "Termo de serviço",
+        description: undefined,
+        quantity: 1,
+        unitPrice: 0,
+        discount: 0,
+        total: 0,
+        sortOrder: 0,
+      },
+    ];
+  }
+
+  if (!profile.showServicePricing) {
+    items = items.map((item) => ({
+      ...item,
+      quantity: 1,
+      unitPrice: 0,
+      discount: 0,
+      total: 0,
+    }));
+  }
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  );
+  const discount =
+    items.reduce((sum, item) => sum + item.discount, 0) +
     parseMoney(String(formData.get("discount") || "0"));
-  const total = Math.max(
+  let total = Math.max(
     items.reduce((sum, item) => sum + item.total, 0) -
       parseMoney(String(formData.get("discount") || "0")),
     0
   );
+
+  const paidRaw = parseMoney(String(formData.get("amountPaid") || "0"));
+  if (profile.showPaidAmount && paidRaw > 0 && total <= 0) {
+    // Recibo/comprovante podem ter valor recebido maior que a soma dos itens.
+    total = paidRaw;
+    if (items.length === 1 && items[0].unitPrice === 0) {
+      items = [
+        {
+          ...items[0],
+          unitPrice: paidRaw,
+          total: paidRaw,
+        },
+      ];
+    }
+  }
+
+  const amountPaid = profile.showPaidAmount
+    ? Math.max(paidRaw, total > 0 ? total : paidRaw)
+    : profile.showTrackPayments && formData.get("trackPayments") === "1"
+      ? Math.min(total, paidRaw)
+      : 0;
+
+  const trackPayments =
+    profile.showPaidAmount ||
+    (profile.showTrackPayments && formData.get("trackPayments") === "1")
+      ? 1
+      : 0;
 
   const number = await nextDocumentNumber(type);
 
@@ -123,21 +195,35 @@ export async function createDocumentAction(formData: FormData) {
       clientId,
       status: String(formData.get("status") || "rascunho"),
       issueDate: String(formData.get("issueDate") || todayISO()),
-      validUntil: String(formData.get("validUntil") || "") || null,
-      deliveryDeadline: String(formData.get("deliveryDeadline") || "") || null,
-      warranty: String(formData.get("warranty") || "") || null,
-      notes: String(formData.get("notes") || "") || null,
-      conditions: String(formData.get("conditions") || "") || null,
-      paymentMethod: String(formData.get("paymentMethod") || "") || null,
-      downPayment: parseMoney(String(formData.get("downPayment") || "0")),
-      installmentsCount: installments.length || Number(formData.get("installmentsCount") || 1),
-      trackPayments: formData.get("trackPayments") === "1" ? 1 : 0,
-      amountPaid: Math.min(
-        total,
-        parseMoney(String(formData.get("amountPaid") || "0"))
-      ),
-      subtotal,
-      discount,
+      validUntil: profile.showValidUntil
+        ? String(formData.get("validUntil") || "") || null
+        : null,
+      deliveryDeadline: profile.showDeliveryDeadline
+        ? String(formData.get("deliveryDeadline") || "") || null
+        : null,
+      warranty: profile.showWarranty
+        ? String(formData.get("warranty") || "") || null
+        : null,
+      notes: profile.showNotes
+        ? String(formData.get("notes") || "") || null
+        : null,
+      conditions: profile.showConditions
+        ? String(formData.get("conditions") || "") || null
+        : null,
+      paymentMethod:
+        profile.showPaymentTerms || profile.showPaidAmount
+          ? String(formData.get("paymentMethod") || "") || null
+          : null,
+      downPayment: profile.showInstallmentPlan
+        ? parseMoney(String(formData.get("downPayment") || "0"))
+        : 0,
+      installmentsCount: profile.showInstallmentPlan
+        ? installments.length || Number(formData.get("installmentsCount") || 1)
+        : 0,
+      trackPayments,
+      amountPaid,
+      subtotal: profile.showServicePricing ? subtotal : total,
+      discount: profile.showServicePricing ? discount : 0,
       total,
       updatedAt: new Date().toISOString(),
     })
@@ -178,6 +264,10 @@ export async function approveDocumentAsProjectAction(documentId: number) {
   });
 
   if (!doc) throw new Error("Documento não encontrado");
+
+  if (!getDocumentTypeProfile(doc.type).canConvertToProject) {
+    throw new Error("Este tipo de documento não pode virar projeto.");
+  }
 
   const projectName =
     doc.items[0]?.name ||

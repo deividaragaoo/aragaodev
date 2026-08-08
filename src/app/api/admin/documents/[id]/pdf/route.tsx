@@ -40,6 +40,8 @@ export async function GET(
         conditions: doc.conditions,
         paymentMethod: doc.paymentMethod,
         downPayment: doc.downPayment,
+        amountPaid: doc.amountPaid,
+        trackPayments: doc.trackPayments,
         total: doc.total,
         subtotal: doc.subtotal,
         discount: doc.discount,
