@@ -11,7 +11,12 @@ import {
 } from "@/components/admin/ui";
 import { ClientSelect, type ClientOption } from "@/components/admin/ClientSelect";
 import { PROJECT_STATUSES } from "@/lib/admin/constants";
-import { formatCurrency, parseMoney } from "@/lib/admin/format";
+import {
+  formatCurrency,
+  formatMoneyInput,
+  parseMoney,
+  sanitizeMoneyInput,
+} from "@/lib/admin/format";
 
 function SaveProjectButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -51,14 +56,24 @@ export function ProjectForm({
   preselectedClientId?: number;
 }) {
   const [status, setStatus] = useState(initial?.status || "orcamento");
-  const [projectValue, setProjectValue] = useState(
-    clampMoney(Number(initial?.value ?? 0))
+  const [projectValueText, setProjectValueText] = useState(
+    formatMoneyInput(clampMoney(Number(initial?.value ?? 0)))
   );
-  const [amountPaid, setAmountPaid] = useState(
-    clampMoney(Number(initial?.amountPaid ?? 0))
+  const [amountPaidText, setAmountPaidText] = useState(
+    formatMoneyInput(clampMoney(Number(initial?.amountPaid ?? 0)))
   );
+  const [remainingText, setRemainingText] = useState<string | null>(null);
   const [noDeadline, setNoDeadline] = useState(!initial?.dueDate);
   const [dueDate, setDueDate] = useState(initial?.dueDate || "");
+
+  const projectValue = useMemo(
+    () => clampMoney(parseMoney(projectValueText || "0")),
+    [projectValueText]
+  );
+  const amountPaid = useMemo(() => {
+    const paid = clampMoney(parseMoney(amountPaidText || "0"));
+    return Math.min(paid, projectValue || paid);
+  }, [amountPaidText, projectValue]);
 
   const remaining = useMemo(
     () => clampMoney(Math.max(0, projectValue - amountPaid)),
@@ -88,11 +103,18 @@ export function ProjectForm({
         <AdminInput
           name="value"
           required
-          value={String(projectValue)}
+          inputMode="decimal"
+          placeholder="0,00"
+          value={projectValueText}
           onChange={(e) => {
-            const next = clampMoney(parseMoney(e.target.value || "0"));
-            setProjectValue(next);
-            if (amountPaid > next) setAmountPaid(next);
+            const nextText = sanitizeMoneyInput(e.target.value);
+            setProjectValueText(nextText);
+            setRemainingText(null);
+            const nextValue = clampMoney(parseMoney(nextText || "0"));
+            const paid = clampMoney(parseMoney(amountPaidText || "0"));
+            if (paid > nextValue) {
+              setAmountPaidText(formatMoneyInput(nextValue));
+            }
           }}
         />
       </AdminField>
@@ -117,25 +139,29 @@ export function ProjectForm({
             <AdminField label="Valor já pago">
               <AdminInput
                 inputMode="decimal"
-                value={String(amountPaid)}
+                placeholder="0,00"
+                value={amountPaidText}
                 onChange={(e) => {
-                  const next = clampMoney(parseMoney(e.target.value || "0"));
-                  setAmountPaid(Math.min(next, projectValue || next));
+                  setAmountPaidText(sanitizeMoneyInput(e.target.value));
+                  setRemainingText(null);
                 }}
               />
             </AdminField>
             <AdminField label="Valor que falta pagar">
               <AdminInput
                 inputMode="decimal"
-                value={String(remaining)}
+                placeholder="0,00"
+                value={remainingText ?? formatMoneyInput(remaining)}
                 onChange={(e) => {
+                  const nextText = sanitizeMoneyInput(e.target.value);
+                  setRemainingText(nextText);
                   const nextRemaining = clampMoney(
-                    parseMoney(e.target.value || "0")
+                    parseMoney(nextText || "0")
                   );
                   const nextPaid = clampMoney(
                     Math.max(0, projectValue - nextRemaining)
                   );
-                  setAmountPaid(nextPaid);
+                  setAmountPaidText(formatMoneyInput(nextPaid));
                 }}
               />
             </AdminField>
