@@ -26,7 +26,8 @@ export default async function ClienteDetalhePage({
   const data = await getClientById(Number(id));
   if (!data) notFound();
 
-  const { client, projects, documents, receivables, pendingTotal } = data;
+  const { client, projects, documents, receivables, pendingTotal, tasksByProject } =
+    data;
   const update = updateClientAction.bind(null, client.id);
   const remove = deleteClientAction.bind(null, client.id);
   const receivedTotal = receivables
@@ -88,33 +89,57 @@ export default async function ClienteDetalhePage({
           {projects.length === 0 ? (
             <EmptyState title="Sem projetos" />
           ) : (
-            projects.map((project) => (
-              <div key={project.id} className="rounded-xl border border-white/[0.06] px-3 py-2.5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">{project.name}</p>
-                    <p className="text-xs text-muted">
-                      {formatCurrency(project.value)} · prazo{" "}
-                      {project.dueDate
-                        ? formatDate(project.dueDate)
-                        : "Sem prazo"}
-                    </p>
+            projects.map((project) => {
+              const tasks = tasksByProject[project.id] || [];
+              const pendingTasks = tasks.filter((task) => !task.done);
+              return (
+                <Link
+                  key={project.id}
+                  href={`/admin/projetos/${project.id}`}
+                  className="block rounded-xl border border-white/[0.06] px-3 py-2.5 transition hover:bg-white/[0.02]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">{project.name}</p>
+                      <p className="text-xs text-muted">
+                        {formatCurrency(project.value)} · prazo{" "}
+                        {project.dueDate
+                          ? formatDate(project.dueDate)
+                          : "Sem prazo"}
+                      </p>
+                      {tasks.length > 0 ? (
+                        <p className="mt-1 text-xs text-[#ff6b35]">
+                          {pendingTasks.length > 0
+                            ? `${pendingTasks.length} pendente${pendingTasks.length > 1 ? "s" : ""}: ${pendingTasks
+                                .slice(0, 2)
+                                .map((task) => task.title)
+                                .join(" · ")}${
+                                pendingTasks.length > 2 ? "…" : ""
+                              }`
+                            : "Checklist concluído"}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-muted">
+                          Clique para adicionar o que falta fazer
+                        </p>
+                      )}
+                    </div>
+                    <StatusBadge
+                      label={
+                        PROJECT_STATUSES.find((s) => s.value === project.status)
+                          ?.label || project.status
+                      }
+                    />
                   </div>
-                  <StatusBadge
-                    label={
-                      PROJECT_STATUSES.find((s) => s.value === project.status)?.label ||
-                      project.status
-                    }
-                  />
-                </div>
-                <div className="mt-3">
-                  <ProjectProgress
-                    value={project.value || 0}
-                    amountPaid={project.amountPaid || 0}
-                  />
-                </div>
-              </div>
-            ))
+                  <div className="mt-3">
+                    <ProjectProgress
+                      value={project.value || 0}
+                      amountPaid={project.amountPaid || 0}
+                    />
+                  </div>
+                </Link>
+              );
+            })
           )}
         </HistoryBlock>
 
