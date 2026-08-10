@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS project_tasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  done INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS receivables (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   client_id INTEGER NOT NULL REFERENCES clients(id),
@@ -182,6 +192,7 @@ DROP TABLE IF EXISTS document_counters;
 DROP TABLE IF EXISTS activity_log;
 DROP TABLE IF EXISTS receivables;
 DROP TABLE IF EXISTS payables;
+DROP TABLE IF EXISTS project_tasks;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS clients;

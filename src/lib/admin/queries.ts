@@ -1,4 +1,4 @@
-import { desc, eq, like, or } from "drizzle-orm";
+import { desc, eq, inArray, like, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   activityLog,
@@ -6,6 +6,7 @@ import {
   documents,
   payables,
   projects,
+  projectTasks,
   receivables,
 } from "@/lib/db/schema";
 import { ensureAdminReady } from "@/lib/db/ensure";
@@ -191,12 +192,30 @@ export async function getClientById(id: number) {
     .filter((r) => r.status === "pendente" || isOverdue(r.dueDate, r.status))
     .reduce((sum, r) => sum + r.amount, 0);
 
+  const projectIds = clientProjects.map((project) => project.id);
+  const tasks =
+    projectIds.length > 0
+      ? await db
+          .select()
+          .from(projectTasks)
+          .where(inArray(projectTasks.projectId, projectIds))
+          .orderBy(projectTasks.sortOrder, projectTasks.id)
+      : [];
+
+  const tasksByProject = Object.fromEntries(
+    projectIds.map((projectId) => [
+      projectId,
+      tasks.filter((task) => task.projectId === projectId),
+    ])
+  );
+
   return {
     client,
     projects: clientProjects,
     documents: clientDocs,
     receivables: clientReceivables,
     pendingTotal: pending,
+    tasksByProject,
   };
 }
 
@@ -222,6 +241,34 @@ export async function listProjects() {
     .from(projects)
     .leftJoin(clients, eq(projects.clientId, clients.id))
     .orderBy(desc(projects.createdAt));
+}
+
+export async function listProjectTaskStats() {
+  await ensureAdminReady();
+  const tasks = await db
+    .select({
+      projectId: projectTasks.projectId,
+      done: projectTasks.done,
+    })
+    .from(projectTasks);
+
+  const stats: Record<number, { pending: number; total: number }> = {};
+  for (const task of tasks) {
+    const current = stats[task.projectId] || { pending: 0, total: 0 };
+    current.total += 1;
+    if (!task.done) current.pending += 1;
+    stats[task.projectId] = current;
+  }
+  return stats;
+}
+
+export async function listProjectTasks(projectId: number) {
+  await ensureAdminReady();
+  return db
+    .select()
+    .from(projectTasks)
+    .where(eq(projectTasks.projectId, projectId))
+    .orderBy(projectTasks.sortOrder, projectTasks.id);
 }
 
 export async function getProjectFinance(projectId: number) {

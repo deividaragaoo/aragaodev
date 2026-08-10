@@ -8,16 +8,19 @@ import {
 import { ProjectProgress } from "@/components/admin/ProjectProgress";
 import { PROJECT_STATUSES } from "@/lib/admin/constants";
 import { formatCurrency, formatDate } from "@/lib/admin/format";
-import { getProjectFinance, listProjects } from "@/lib/admin/queries";
+import { getProjectFinance, listProjects, listProjectTaskStats } from "@/lib/admin/queries";
 
 export default async function ProjetosPage() {
   const rows = await listProjects();
-  const finances = await Promise.all(
-    rows.map(async (project) => ({
-      id: project.id,
-      ...(await getProjectFinance(project.id)),
-    }))
-  );
+  const [finances, taskStats] = await Promise.all([
+    Promise.all(
+      rows.map(async (project) => ({
+        id: project.id,
+        ...(await getProjectFinance(project.id)),
+      }))
+    ),
+    listProjectTaskStats(),
+  ]);
   const financeMap = Object.fromEntries(finances.map((f) => [f.id, f]));
 
   return (
@@ -42,6 +45,7 @@ export default async function ProjetosPage() {
           <div className="space-y-3">
             {rows.map((project) => {
               const finance = financeMap[project.id];
+              const tasks = taskStats[project.id];
               return (
                 <div
                   key={project.id}
@@ -56,6 +60,17 @@ export default async function ProjetosPage() {
                           ? ` · ${project.clientCompany}`
                           : ""}
                       </p>
+                      {tasks && tasks.total > 0 ? (
+                        <p className="mt-1 text-xs text-[#ff6b35]">
+                          {tasks.pending > 0
+                            ? `${tasks.pending} tarefa${tasks.pending > 1 ? "s" : ""} pendente${tasks.pending > 1 ? "s" : ""}`
+                            : "Checklist concluído"}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs text-muted">
+                          Sem checklist ainda
+                        </p>
+                      )}
                     </div>
                     <StatusBadge
                       label={
@@ -94,7 +109,7 @@ export default async function ProjetosPage() {
                   <div className="mt-4">
                     <Link href={`/admin/projetos/${project.id}`}>
                       <AdminButton variant="secondary" type="button">
-                        Editar
+                        Abrir / tarefas
                       </AdminButton>
                     </Link>
                   </div>

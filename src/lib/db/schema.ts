@@ -73,6 +73,22 @@ export const projects = sqliteTable("projects", {
     .default(sql`(datetime('now'))`),
 });
 
+export const projectTasks = sqliteTable("project_tasks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  projectId: integer("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  done: integer("done").notNull().default(0),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
 export const receivables = sqliteTable("receivables", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   clientId: integer("client_id")
@@ -198,6 +214,14 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [clients.id],
   }),
   receivables: many(receivables),
+  tasks: many(projectTasks),
+}));
+
+export const projectTasksRelations = relations(projectTasks, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectTasks.projectId],
+    references: [projects.id],
+  }),
 }));
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({

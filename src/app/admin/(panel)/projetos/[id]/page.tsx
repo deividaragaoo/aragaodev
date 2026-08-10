@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { PageHeader, AdminButton } from "@/components/admin/ui";
 import { ProjectForm } from "@/components/admin/ProjectForm";
+import { ProjectTasks } from "@/components/admin/ProjectTasks";
 import {
   deleteProjectAction,
   updateProjectAction,
 } from "@/lib/admin/actions/projects";
-import { listClients } from "@/lib/admin/queries";
+import { listClients, listProjectTasks } from "@/lib/admin/queries";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { ensureAdminReady } from "@/lib/db/ensure";
@@ -23,7 +24,10 @@ export default async function EditarProjetoPage({
   });
   if (!project) notFound();
 
-  const clients = await listClients();
+  const [clients, tasks] = await Promise.all([
+    listClients(),
+    listProjectTasks(project.id),
+  ]);
   const update = updateProjectAction.bind(null, project.id);
   const remove = deleteProjectAction.bind(null, project.id);
 
@@ -41,6 +45,7 @@ export default async function EditarProjetoPage({
         }
       />
       <ProjectForm action={update} clients={clients} initial={project} />
+      <ProjectTasks projectId={project.id} tasks={tasks} />
     </div>
   );
 }

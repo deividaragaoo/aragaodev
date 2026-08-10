@@ -8,7 +8,7 @@ import { logActivity } from "@/lib/admin/activity";
 import { parseMoney } from "@/lib/admin/format";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { projects } from "@/lib/db/schema";
+import { projects, projectTasks } from "@/lib/db/schema";
 import { ensureAdminReady, persistAdminDb } from "@/lib/db/ensure";
 
 const projectSchema = z.object({
@@ -52,12 +52,13 @@ function formValues(formData: FormData) {
   };
 }
 
-function revalidateProjectPaths(id?: number) {
+function revalidateProjectPaths(id?: number, clientId?: number) {
   revalidatePath("/admin/projetos");
   revalidatePath("/admin/projetos/novo");
   revalidatePath("/admin/clientes");
   revalidatePath("/admin");
   if (id) revalidatePath(`/admin/projetos/${id}`);
+  if (clientId) revalidatePath(`/admin/clientes/${clientId}`);
 }
 
 export async function createProjectAction(formData: FormData) {
@@ -92,7 +93,7 @@ export async function createProjectAction(formData: FormData) {
       Number.isFinite(createdAtMs) &&
       Date.now() - createdAtMs < 15_000
     ) {
-      revalidateProjectPaths(latest.id);
+      revalidateProjectPaths(latest.id, latest.clientId);
       redirect("/admin/projetos");
     }
   }
@@ -114,8 +115,8 @@ export async function createProjectAction(formData: FormData) {
   });
 
   await persistAdminDb();
-  revalidateProjectPaths(row.id);
-  redirect("/admin/projetos");
+  revalidateProjectPaths(row.id, parsed.clientId);
+  redirect(`/admin/projetos/${row.id}`);
 }
 
 export async function updateProjectAction(id: number, formData: FormData) {
@@ -141,7 +142,7 @@ export async function updateProjectAction(id: number, formData: FormData) {
   });
 
   await persistAdminDb();
-  revalidateProjectPaths(id);
+  revalidateProjectPaths(id, parsed.clientId);
   redirect("/admin/projetos");
 }
 
@@ -174,7 +175,7 @@ export async function updateProjectPaidAction(id: number, amountPaid: number) {
   });
 
   await persistAdminDb();
-  revalidateProjectPaths(id);
+  revalidateProjectPaths(id, project.clientId);
 }
 
 /** @deprecated use updateProjectPaidAction */
@@ -203,6 +204,7 @@ export async function deleteProjectAction(id: number) {
     where: eq(projects.id, id),
   });
 
+  await db.delete(projectTasks).where(eq(projectTasks.projectId, id));
   await db.delete(projects).where(eq(projects.id, id));
 
   await logActivity({
@@ -213,6 +215,91 @@ export async function deleteProjectAction(id: number) {
   });
 
   await persistAdminDb();
-  revalidateProjectPaths();
+  revalidateProjectPaths(undefined, project?.clientId);
   redirect("/admin/projetos");
+}
+
+export async function createProjectTaskAction(
+  projectId: number,
+  formData: FormData
+) {
+  await requireSession();
+  await ensureAdminReady();
+
+  const title = String(formData.get("title") || "").trim();
+  if (!title) {
+    throw new Error("Informe o que falta fazer.");
+  }
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, projectId),
+  });
+  if (!project) throw new Error("Projeto não encontrado.");
+
+  const existing = await db
+    .select({ id: projectTasks.id })
+    .from(projectTasks)
+    .where(eq(projectTasks.projectId, projectId));
+
+  await db.insert(projectTasks).values({
+    projectId,
+    title,
+    done: 0,
+    sortOrder: existing.length,
+    updatedAt: new Date().toISOString(),
+  });
+
+  await logActivity({
+    action: "Tarefa adicionada ao projeto",
+    entityType: "project",
+    entityId: projectId,
+    details: title,
+  });
+
+  await persistAdminDb();
+  revalidateProjectPaths(projectId, project.clientId);
+}
+
+export async function toggleProjectTaskAction(taskId: number) {
+  await requireSession();
+  await ensureAdminReady();
+
+  const task = await db.query.projectTasks.findFirst({
+    where: eq(projectTasks.id, taskId),
+  });
+  if (!task) throw new Error("Tarefa não encontrada.");
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, task.projectId),
+  });
+
+  await db
+    .update(projectTasks)
+    .set({
+      done: task.done ? 0 : 1,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(projectTasks.id, taskId));
+
+  await persistAdminDb();
+  revalidateProjectPaths(task.projectId, project?.clientId);
+}
+
+export async function deleteProjectTaskAction(taskId: number) {
+  await requireSession();
+  await ensureAdminReady();
+
+  const task = await db.query.projectTasks.findFirst({
+    where: eq(projectTasks.id, taskId),
+  });
+  if (!task) throw new Error("Tarefa não encontrada.");
+
+  const project = await db.query.projects.findFirst({
+    where: eq(projects.id, task.projectId),
+  });
+
+  await db.delete(projectTasks).where(eq(projectTasks.id, taskId));
+
+  await persistAdminDb();
+  revalidateProjectPaths(task.projectId, project?.clientId);
 }
