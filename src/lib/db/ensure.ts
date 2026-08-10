@@ -325,7 +325,12 @@ async function ensureSchemaAndSeed() {
   await dbClient.executeMultiple(CREATE_SQL);
 
   const username = (process.env.ADMIN_USERNAME || "deividaragaoo").trim();
-  const password = process.env.ADMIN_PASSWORD || "Aragao212054@";
+  const envPassword = process.env.ADMIN_PASSWORD?.trim();
+  // Migrate away from the old default typo even if still set in env.
+  const password =
+    !envPassword || envPassword === "Aragao212054@"
+      ? "Aragao212504@"
+      : envPassword;
   const keyword = process.env.ADMIN_KEYWORD || "deividgostoso";
   const now = new Date().toISOString();
   let dirty = false;
@@ -348,13 +353,28 @@ async function ensureSchemaAndSeed() {
   } else {
     const passwordOk = await verifySecret(password, matched.passwordHash);
     const keywordOk = await verifySecret(keyword, matched.keywordHash);
-    if (!passwordOk || !keywordOk || matched.username !== username) {
+    // Also accept the previous default while migrating credentials.
+    const legacyPasswordOk =
+      passwordOk ||
+      (await verifySecret("Aragao212054@", matched.passwordHash)) ||
+      (await verifySecret("Aragao212504@", matched.passwordHash));
+    if (!legacyPasswordOk || !keywordOk || matched.username !== username) {
       await db
         .update(adminUsers)
         .set({
           username,
           passwordHash: await hashSecret(password),
           keywordHash: await hashSecret(keyword),
+          updatedAt: now,
+        })
+        .where(eq(adminUsers.id, matched.id));
+      dirty = true;
+    } else if (!passwordOk) {
+      // Hash still on a legacy password — normalize to the preferred one.
+      await db
+        .update(adminUsers)
+        .set({
+          passwordHash: await hashSecret(password),
           updatedAt: now,
         })
         .where(eq(adminUsers.id, matched.id));
