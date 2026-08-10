@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import {
   AdminButton,
@@ -11,21 +11,70 @@ import {
 
 type Step = "credentials" | "keyword";
 
+const REMEMBER_KEY = "aragao_admin_remember_login";
+
+type RememberedLogin = {
+  username: string;
+  password: string;
+};
+
+function loadRemembered(): RememberedLogin | null {
+  try {
+    const raw = localStorage.getItem(REMEMBER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as RememberedLogin;
+    if (!parsed?.username || !parsed?.password) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveRemembered(username: string, password: string) {
+  localStorage.setItem(
+    REMEMBER_KEY,
+    JSON.stringify({ username, password } satisfies RememberedLogin)
+  );
+}
+
+function clearRemembered() {
+  localStorage.removeItem(REMEMBER_KEY);
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("credentials");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  async function submitCredentials(username: string, password: string) {
+  useEffect(() => {
+    const saved = loadRemembered();
+    if (saved) {
+      setUsername(saved.username);
+      setPassword(saved.password);
+      setRemember(true);
+    }
+    setReady(true);
+  }, []);
+
+  async function submitCredentials(
+    nextUsername: string,
+    nextPassword: string,
+    nextRemember: boolean
+  ) {
     setError(null);
     const response = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         step: "credentials",
-        username,
-        password,
+        username: nextUsername,
+        password: nextPassword,
+        remember: nextRemember,
       }),
     });
     const payload = (await response.json()) as {
@@ -40,10 +89,16 @@ export function LoginForm() {
       return;
     }
 
+    if (nextRemember) {
+      saveRemembered(nextUsername, nextPassword);
+    } else {
+      clearRemembered();
+    }
+
     setStep("keyword");
   }
 
-  async function submitKeyword(keyword: string) {
+  async function submitKeyword(keyword: string, nextRemember: boolean) {
     setError(null);
     const response = await fetch("/api/admin/login", {
       method: "POST",
@@ -51,6 +106,7 @@ export function LoginForm() {
       body: JSON.stringify({
         step: "keyword",
         keyword,
+        remember: nextRemember,
       }),
     });
     const payload = (await response.json()) as {
@@ -94,12 +150,16 @@ export function LoginForm() {
             className="space-y-4"
             onSubmit={(event) => {
               event.preventDefault();
-              const data = new FormData(event.currentTarget);
-              const username = String(data.get("username") || "").trim();
-              const password = String(data.get("password") || "");
+              const nextUsername = username.trim();
+              const nextPassword = password;
+              const nextRemember = remember;
               startTransition(async () => {
                 try {
-                  await submitCredentials(username, password);
+                  await submitCredentials(
+                    nextUsername,
+                    nextPassword,
+                    nextRemember
+                  );
                 } catch {
                   setError("Falha de rede ao autenticar.");
                 }
@@ -112,6 +172,8 @@ export function LoginForm() {
                 autoComplete="username"
                 placeholder="deividaragaoo"
                 required
+                value={ready ? username : ""}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </AdminField>
             <AdminField label="Senha">
@@ -121,8 +183,19 @@ export function LoginForm() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 required
+                value={ready ? password : ""}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </AdminField>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-4 w-4 accent-[#ff6b35]"
+              />
+              Lembrar usuário e senha neste dispositivo
+            </label>
             {error ? <p className="text-sm text-red-400">{error}</p> : null}
             <AdminButton type="submit" className="w-full" disabled={pending}>
               {pending ? "Validando..." : "Continuar"}
@@ -135,9 +208,10 @@ export function LoginForm() {
               event.preventDefault();
               const data = new FormData(event.currentTarget);
               const keyword = String(data.get("keyword") || "");
+              const nextRemember = remember;
               startTransition(async () => {
                 try {
-                  await submitKeyword(keyword);
+                  await submitKeyword(keyword, nextRemember);
                 } catch {
                   setError("Falha de rede ao validar palavra-chave.");
                 }
@@ -158,6 +232,16 @@ export function LoginForm() {
             <AdminButton type="submit" className="w-full" disabled={pending}>
               {pending ? "Entrando..." : "Acessar painel"}
             </AdminButton>
+            <button
+              type="button"
+              className="w-full text-sm text-muted hover:text-foreground"
+              onClick={() => {
+                setStep("credentials");
+                setError(null);
+              }}
+            >
+              Voltar
+            </button>
           </form>
         )}
       </div>

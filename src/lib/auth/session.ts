@@ -5,7 +5,10 @@ export const SESSION_COOKIE = "aragao_admin_session";
 export const CHALLENGE_COOKIE = "aragao_admin_challenge";
 
 const SESSION_TTL = "7d";
+const SESSION_TTL_REMEMBER = "30d";
 const CHALLENGE_TTL = "10m";
+const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
+const SESSION_MAX_AGE_REMEMBER = 60 * 60 * 24 * 30;
 
 function getSecret() {
   const secret =
@@ -32,11 +35,14 @@ export type ChallengePayload = {
   stage: "keyword_required";
 };
 
-export async function createSessionToken(payload: SessionPayload) {
+export async function createSessionToken(
+  payload: SessionPayload,
+  remember = false
+) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(SESSION_TTL)
+    .setExpirationTime(remember ? SESSION_TTL_REMEMBER : SESSION_TTL)
     .sign(getSecret());
 }
 
@@ -53,14 +59,14 @@ export async function verifyToken<T>(token: string) {
   return payload as T & { exp?: number; iat?: number };
 }
 
-export async function setSessionCookie(token: string) {
+export async function setSessionCookie(token: string, remember = false) {
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: remember ? SESSION_MAX_AGE_REMEMBER : SESSION_MAX_AGE,
   });
 }
 
