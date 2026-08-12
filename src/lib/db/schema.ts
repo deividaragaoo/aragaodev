@@ -195,6 +195,20 @@ export const activityLog = sqliteTable("activity_log", {
     .default(sql`(datetime('now'))`),
 });
 
+export const reminders = sqliteTable("reminders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  notes: text("notes"),
+  dueDate: text("due_date"),
+  done: integer("done").notNull().default(0),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
 export const documentCounters = sqliteTable("document_counters", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   type: text("type").notNull(),

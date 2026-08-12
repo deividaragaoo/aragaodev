@@ -271,7 +271,12 @@ export default async function FinanceiroPage() {
             />
           </AdminField>
           <AdminField label="Valor">
-            <AdminInput name="amount" required />
+            <AdminInput
+              name="amount"
+              required
+              inputMode="decimal"
+              placeholder="Ex.: 1.500,00"
+            />
           </AdminField>
           <AdminField label="Vencimento">
             <AdminInput name="dueDate" type="date" required />
@@ -411,7 +416,12 @@ export default async function FinanceiroPage() {
             <AdminInput name="supplier" />
           </AdminField>
           <AdminField label="Valor">
-            <AdminInput name="amount" required />
+            <AdminInput
+              name="amount"
+              required
+              inputMode="decimal"
+              placeholder="Ex.: 250,00"
+            />
           </AdminField>
           <AdminField label="Vencimento">
             <AdminInput name="dueDate" type="date" required />

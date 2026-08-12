@@ -176,6 +176,16 @@ CREATE TABLE IF NOT EXISTS activity_log (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS reminders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  notes TEXT,
+  due_date TEXT,
+  done INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS document_counters (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT NOT NULL,
@@ -190,6 +200,7 @@ DROP TABLE IF EXISTS document_installments;
 DROP TABLE IF EXISTS document_items;
 DROP TABLE IF EXISTS document_counters;
 DROP TABLE IF EXISTS activity_log;
+DROP TABLE IF EXISTS reminders;
 DROP TABLE IF EXISTS receivables;
 DROP TABLE IF EXISTS payables;
 DROP TABLE IF EXISTS project_tasks;

@@ -8,6 +8,7 @@ import {
   projects,
   projectTasks,
   receivables,
+  reminders,
 } from "@/lib/db/schema";
 import { ensureAdminReady } from "@/lib/db/ensure";
 import { isOverdue, todayISO } from "@/lib/admin/format";
@@ -21,6 +22,7 @@ export async function getDashboardData() {
   const allPayables = await db.select().from(payables);
   const allProjects = await db.select().from(projects);
   const allClients = await db.select().from(clients);
+  const allReminders = await db.select().from(reminders);
 
   const syncStatus = <T extends { status: string; dueDate: string }>(
     items: T[]
@@ -36,15 +38,49 @@ export async function getDashboardData() {
   const rec = syncStatus(allReceivables);
   const pay = syncStatus(allPayables);
 
-  const received = rec
+  const activeProjects = allProjects.filter((p) => p.status !== "cancelado");
+  const projectIdsWithLedger = new Set(
+    rec
+      .map((r) => r.projectId)
+      .filter((id): id is number => typeof id === "number" && id > 0)
+  );
+
+  // Combina livro (contas a receber) com pagamentos registrados nos projetos.
+  // Projetos sem lançamentos usam amountPaid/value; com lançamentos, o livro manda.
+  let received = 0;
+  let toReceive = 0;
+  let overdueReceive = 0;
+
+  for (const project of activeProjects) {
+    const projectRecs = rec.filter((r) => r.projectId === project.id);
+    if (projectRecs.length > 0) {
+      received += projectRecs
+        .filter((r) => r.status === "pago")
+        .reduce((sum, r) => sum + r.amount, 0);
+      toReceive += projectRecs
+        .filter((r) => r.status === "pendente" || r.status === "atrasado")
+        .reduce((sum, r) => sum + r.amount, 0);
+      overdueReceive += projectRecs
+        .filter((r) => r.status === "atrasado")
+        .reduce((sum, r) => sum + r.amount, 0);
+    } else {
+      const paid = Math.min(project.value || 0, project.amountPaid || 0);
+      received += paid;
+      toReceive += Math.max(0, (project.value || 0) - paid);
+    }
+  }
+
+  const avulso = rec.filter((r) => !r.projectId);
+  received += avulso
     .filter((r) => r.status === "pago")
     .reduce((sum, r) => sum + r.amount, 0);
-  const toReceive = rec
+  toReceive += avulso
     .filter((r) => r.status === "pendente" || r.status === "atrasado")
     .reduce((sum, r) => sum + r.amount, 0);
-  const overdueReceive = rec
+  overdueReceive += avulso
     .filter((r) => r.status === "atrasado")
     .reduce((sum, r) => sum + r.amount, 0);
+
   const paidOut = pay
     .filter((p) => p.status === "pago")
     .reduce((sum, p) => sum + p.amount, 0);
@@ -55,7 +91,7 @@ export async function getDashboardData() {
     .filter((p) => p.status === "atrasado")
     .reduce((sum, p) => sum + p.amount, 0);
 
-  const monthReceived = rec
+  const monthReceivedFromLedger = rec
     .filter(
       (r) =>
         r.status === "pago" &&
@@ -64,6 +100,21 @@ export async function getDashboardData() {
         r.paidAt <= today
     )
     .reduce((sum, r) => sum + r.amount, 0);
+
+  // Projetos pagos só pelo campo amountPaid (sem lançamento) entram no mês
+  // se foram atualizados neste mês.
+  const monthReceivedFromProjects = activeProjects
+    .filter((p) => !projectIdsWithLedger.has(p.id) && (p.amountPaid || 0) > 0)
+    .filter((p) => {
+      const stamp = (p.updatedAt || p.createdAt || "").slice(0, 10);
+      return stamp >= monthStart && stamp <= today;
+    })
+    .reduce(
+      (sum, p) => sum + Math.min(p.value || 0, p.amountPaid || 0),
+      0
+    );
+
+  const monthReceived = monthReceivedFromLedger + monthReceivedFromProjects;
 
   const upcomingReceivables = rec
     .filter((r) => r.status === "pendente")
@@ -104,6 +155,14 @@ export async function getDashboardData() {
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
+  const todayReminders = allReminders
+    .filter(
+      (item) =>
+        !item.done && (!item.dueDate || item.dueDate <= today)
+    )
+    .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""))
+    .slice(0, 5);
+
   return {
     finance: {
       monthRevenue: monthReceived,
@@ -134,6 +193,7 @@ export async function getDashboardData() {
       overduePayables,
       dueSoonProjects,
       clientsWithPending,
+      todayReminders,
     },
   };
 }
@@ -420,6 +480,14 @@ export async function listActivity(limit = 100) {
     .from(activityLog)
     .orderBy(desc(activityLog.createdAt))
     .limit(limit);
+}
+
+export async function listReminders() {
+  await ensureAdminReady();
+  return db
+    .select()
+    .from(reminders)
+    .orderBy(desc(reminders.dueDate), desc(reminders.createdAt));
 }
 
 export async function getCompanySettings() {

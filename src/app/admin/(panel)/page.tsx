@@ -136,6 +136,37 @@ export default async function AdminDashboardPage() {
               ))
             )}
           </AlertCard>
+
+          <AlertCard title="Lembretes de hoje">
+            {data.alerts.todayReminders.length === 0 ? (
+              <Empty>
+                Nenhum lembrete pendente.{" "}
+                <Link href="/admin/lembretes" className="underline">
+                  Abrir Lembretes
+                </Link>
+              </Empty>
+            ) : (
+              <>
+                {data.alerts.todayReminders.map((item) => (
+                  <Row
+                    key={item.id}
+                    title={item.title}
+                    meta={
+                      item.dueDate
+                        ? `Para ${formatDate(item.dueDate)}`
+                        : "Sem data"
+                    }
+                  />
+                ))}
+                <Link
+                  href="/admin/lembretes"
+                  className="mt-2 block px-3 text-xs text-[#ff6b35] hover:underline"
+                >
+                  Ver todos os lembretes
+                </Link>
+              </>
+            )}
+          </AlertCard>
         </div>
       </section>
     </div>

@@ -5,10 +5,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logActivity } from "@/lib/admin/activity";
+import { setProjectPaidAmount } from "@/lib/admin/finance-sync";
 import { parseMoney } from "@/lib/admin/format";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { projects, projectTasks } from "@/lib/db/schema";
+import { projects, projectTasks, receivables } from "@/lib/db/schema";
 import { ensureAdminReady, persistAdminDb } from "@/lib/db/ensure";
 
 const projectSchema = z.object({
@@ -56,6 +57,7 @@ function revalidateProjectPaths(id?: number, clientId?: number) {
   revalidatePath("/admin/projetos");
   revalidatePath("/admin/projetos/novo");
   revalidatePath("/admin/clientes");
+  revalidatePath("/admin/financeiro");
   revalidatePath("/admin");
   if (id) revalidatePath(`/admin/projetos/${id}`);
   if (clientId) revalidatePath(`/admin/clientes/${clientId}`);
@@ -65,7 +67,6 @@ export async function createProjectAction(formData: FormData) {
   await requireSession();
   await ensureAdminReady();
   const parsed = projectSchema.parse(formValues(formData));
-  const progress = paymentProgress(parsed.value, parsed.amountPaid);
 
   // Guard against double-submit creating duplicate projects.
   const recent = await db
@@ -102,10 +103,16 @@ export async function createProjectAction(formData: FormData) {
     .insert(projects)
     .values({
       ...parsed,
-      progress,
+      // amountPaid será alinhado via ledger abaixo
+      amountPaid: 0,
+      progress: paymentProgress(parsed.value, 0),
       updatedAt: new Date().toISOString(),
     })
     .returning({ id: projects.id });
+
+  if (parsed.amountPaid > 0) {
+    await setProjectPaidAmount(row.id, parsed.amountPaid);
+  }
 
   await logActivity({
     action: "Projeto criado",
@@ -123,16 +130,23 @@ export async function updateProjectAction(id: number, formData: FormData) {
   await requireSession();
   await ensureAdminReady();
   const parsed = projectSchema.parse(formValues(formData));
-  const progress = paymentProgress(parsed.value, parsed.amountPaid);
 
   await db
     .update(projects)
     .set({
-      ...parsed,
-      progress,
+      clientId: parsed.clientId,
+      name: parsed.name,
+      description: parsed.description,
+      value: parsed.value,
+      startDate: parsed.startDate,
+      dueDate: parsed.dueDate,
+      status: parsed.status,
+      notes: parsed.notes,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(projects.id, id));
+
+  await setProjectPaidAmount(id, parsed.amountPaid);
 
   await logActivity({
     action: "Projeto atualizado",
@@ -150,32 +164,18 @@ export async function updateProjectPaidAction(id: number, amountPaid: number) {
   await requireSession();
   await ensureAdminReady();
 
-  const project = await db.query.projects.findFirst({
-    where: eq(projects.id, id),
-  });
-  if (!project) return;
-
-  const paid = clampMoney(Math.min(project.value || 0, amountPaid));
-  const progress = paymentProgress(project.value || 0, paid);
-
-  await db
-    .update(projects)
-    .set({
-      amountPaid: paid,
-      progress,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(projects.id, id));
+  const result = await setProjectPaidAmount(id, amountPaid);
+  if (!result) return;
 
   await logActivity({
     action: "Pagamento do projeto atualizado",
     entityType: "project",
     entityId: id,
-    details: `${project.name || `#${id}`} → pago ${paid}`,
+    details: `${result.project.name || `#${id}`} → pago ${result.paid}`,
   });
 
   await persistAdminDb();
-  revalidateProjectPaths(id, project.clientId);
+  revalidateProjectPaths(id, result.project.clientId);
 }
 
 /** @deprecated use updateProjectPaidAction */
@@ -205,6 +205,11 @@ export async function deleteProjectAction(id: number) {
   });
 
   await db.delete(projectTasks).where(eq(projectTasks.projectId, id));
+  // Mantém o histórico financeiro, só desvincula do projeto.
+  await db
+    .update(receivables)
+    .set({ projectId: null, updatedAt: new Date().toISOString() })
+    .where(eq(receivables.projectId, id));
   await db.delete(projects).where(eq(projects.id, id));
 
   await logActivity({

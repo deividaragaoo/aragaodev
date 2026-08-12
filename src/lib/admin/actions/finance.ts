@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logActivity } from "@/lib/admin/activity";
+import { syncProjectPaidFromReceivables } from "@/lib/admin/finance-sync";
 import { parseMoney, todayISO } from "@/lib/admin/format";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -15,7 +16,7 @@ const receivableSchema = z.object({
   clientId: z.coerce.number().int().positive(),
   projectId: z.number().int().positive().optional(),
   description: z.string().min(1),
-  amount: z.coerce.number().positive(),
+  amount: z.number().positive(),
   dueDate: z.string().min(1),
   paymentMethod: z.string().optional(),
   installment: z.string().optional(),
@@ -26,22 +27,35 @@ const payableSchema = z.object({
   description: z.string().min(1),
   category: z.string().min(1),
   supplier: z.string().optional(),
-  amount: z.coerce.number().positive(),
+  amount: z.number().positive(),
   dueDate: z.string().min(1),
   recurrence: z.string().optional(),
   status: z.string().min(1),
 });
+
+function revalidateFinance(projectId?: number | null, clientId?: number) {
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/admin");
+  revalidatePath("/admin/projetos");
+  if (projectId) revalidatePath(`/admin/projetos/${projectId}`);
+  if (clientId) revalidatePath(`/admin/clientes/${clientId}`);
+}
 
 export async function createReceivableAction(formData: FormData) {
   await requireSession();
   await ensureAdminReady();
 
   const projectRaw = String(formData.get("projectId") || "");
+  const amount = parseMoney(String(formData.get("amount") || "0"));
+  if (!(amount > 0)) {
+    throw new Error("Informe um valor válido maior que zero (ex.: 1.500,00).");
+  }
+
   const parsed = receivableSchema.parse({
     clientId: formData.get("clientId"),
     projectId: projectRaw ? Number(projectRaw) : undefined,
     description: String(formData.get("description") || "").trim(),
-    amount: parseMoney(String(formData.get("amount") || "0")),
+    amount,
     dueDate: String(formData.get("dueDate") || ""),
     paymentMethod: String(formData.get("paymentMethod") || "") || undefined,
     installment: String(formData.get("installment") || "") || undefined,
@@ -57,6 +71,8 @@ export async function createReceivableAction(formData: FormData) {
     })
     .returning({ id: receivables.id });
 
+  await syncProjectPaidFromReceivables(parsed.projectId);
+
   await logActivity({
     action: "Conta a receber criada",
     entityType: "receivable",
@@ -65,14 +81,18 @@ export async function createReceivableAction(formData: FormData) {
   });
 
   await persistAdminDb();
-  revalidatePath("/admin/financeiro");
-  revalidatePath("/admin");
+  revalidateFinance(parsed.projectId, parsed.clientId);
   redirect("/admin/financeiro");
 }
 
 export async function markReceivablePaidAction(id: number) {
   await requireSession();
   await ensureAdminReady();
+
+  const existing = await db.query.receivables.findFirst({
+    where: eq(receivables.id, id),
+  });
+  if (!existing) return;
 
   await db
     .update(receivables)
@@ -83,6 +103,8 @@ export async function markReceivablePaidAction(id: number) {
     })
     .where(eq(receivables.id, id));
 
+  await syncProjectPaidFromReceivables(existing.projectId);
+
   await logActivity({
     action: "Pagamento registrado",
     entityType: "receivable",
@@ -90,33 +112,44 @@ export async function markReceivablePaidAction(id: number) {
   });
 
   await persistAdminDb();
-  revalidatePath("/admin/financeiro");
-  revalidatePath("/admin");
+  revalidateFinance(existing.projectId, existing.clientId);
 }
 
 export async function deleteReceivableAction(id: number) {
   await requireSession();
   await ensureAdminReady();
+
+  const existing = await db.query.receivables.findFirst({
+    where: eq(receivables.id, id),
+  });
+  if (!existing) return;
+
   await db.delete(receivables).where(eq(receivables.id, id));
+  await syncProjectPaidFromReceivables(existing.projectId);
+
   await logActivity({
     action: "Conta a receber excluída",
     entityType: "receivable",
     entityId: id,
   });
   await persistAdminDb();
-  revalidatePath("/admin/financeiro");
-  revalidatePath("/admin");
+  revalidateFinance(existing.projectId, existing.clientId);
 }
 
 export async function createPayableAction(formData: FormData) {
   await requireSession();
   await ensureAdminReady();
 
+  const amount = parseMoney(String(formData.get("amount") || "0"));
+  if (!(amount > 0)) {
+    throw new Error("Informe um valor válido maior que zero (ex.: 1.500,00).");
+  }
+
   const parsed = payableSchema.parse({
     description: String(formData.get("description") || "").trim(),
     category: String(formData.get("category") || "outros"),
     supplier: String(formData.get("supplier") || "") || undefined,
-    amount: parseMoney(String(formData.get("amount") || "0")),
+    amount,
     dueDate: String(formData.get("dueDate") || ""),
     recurrence: String(formData.get("recurrence") || "unica"),
     status: String(formData.get("status") || "pendente"),

@@ -71,6 +71,7 @@ export const ADMIN_NAV = [
     icon: "FolderPlus",
   },
   { href: "/admin/financeiro", label: "Financeiro", icon: "Wallet" },
+  { href: "/admin/lembretes", label: "Lembretes", icon: "NotebookPen" },
   { href: "/admin/documentos", label: "Documentos", icon: "FileText" },
   { href: "/admin/historico", label: "Histórico", icon: "History" },
   { href: "/admin/configuracoes", label: "Configurações", icon: "Settings" },
