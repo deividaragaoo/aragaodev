@@ -24,7 +24,7 @@ interface WhatsAppLinkProps {
 export function WhatsAppLink({ className, onRequestContact }: WhatsAppLinkProps) {
   const content = (
     <>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.02] text-muted/70 transition-all duration-300 group-hover:border-white/[0.14] group-hover:text-[#25D366]">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-muted/70 transition-all duration-300 group-hover:border-foreground/15 group-hover:text-[#25D366]">
         <WhatsAppIcon className="h-3.5 w-3.5" />
       </span>
       <span className="min-w-0 text-left">

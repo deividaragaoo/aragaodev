@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, MessageCircle, X } from "lucide-react";
 import { buildQuoteWhatsAppUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "@/components/providers/SitePreferences";
 
 interface ContactNamePanelProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface ContactNamePanelProps {
 export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
   const [name, setName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { locale, t } = usePreferences();
 
   useEffect(() => {
     if (!open) {
@@ -35,7 +37,7 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
     const trimmed = name.trim();
     if (!trimmed) return;
 
-    window.open(buildQuoteWhatsAppUrl(trimmed), "_blank", "noopener,noreferrer");
+    window.open(buildQuoteWhatsAppUrl(trimmed, locale), "_blank", "noopener,noreferrer");
     onClose();
   };
 
@@ -45,7 +47,7 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
         <>
           <motion.button
             type="button"
-            aria-label="Fechar painel de contato"
+            aria-label={t.contactPanel.closePanel}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -62,38 +64,37 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.98 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="pointer-events-auto relative w-full max-w-md rounded-2xl border border-white/[0.08] bg-[#0a0a0a] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.65)] sm:p-6"
+              className="pointer-events-auto relative w-full max-w-md rounded-2xl border border-border bg-elevated p-5 shadow-[0_24px_80px_rgba(0,0,0,0.25)] sm:p-6"
             >
             <button
               type="button"
               onClick={onClose}
-              aria-label="Fechar"
-              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted transition-colors hover:text-foreground"
+              aria-label={t.contactPanel.close}
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition-colors hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
 
             <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#ff5b1f]">
-              Contato
+              {t.contactPanel.kicker}
             </p>
             <h2
               id="contact-name-panel-title"
-              className="pr-10 text-xl font-semibold tracking-[-0.02em] text-white sm:text-2xl"
+              className="pr-10 text-xl font-semibold tracking-[-0.02em] text-foreground sm:text-2xl"
             >
-              Como podemos te chamar?
+              {t.contactPanel.title}
             </h2>
-            <p className="mt-2 text-sm font-light leading-relaxed text-white/55">
-              Informe seu nome para iniciarmos a conversa no WhatsApp com sua mensagem
-              personalizada.
+            <p className="mt-2 text-sm font-light leading-relaxed text-muted">
+              {t.contactPanel.body}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
                 <label
                   htmlFor="contact-name"
-                  className="mb-2 block text-[11px] font-mono uppercase tracking-[0.12em] text-white/40"
+                  className="mb-2 block text-[11px] font-mono uppercase tracking-[0.12em] text-subtle"
                 >
-                  Nome
+                  {t.contactPanel.name}
                 </label>
                 <input
                   ref={inputRef}
@@ -101,12 +102,12 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
                   type="text"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  placeholder="Seu nome"
+                  placeholder={t.contactPanel.placeholder}
                   autoComplete="name"
                   className={cn(
-                    "w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-sm text-white",
-                    "placeholder:text-white/30 outline-none transition-colors",
-                    "focus:border-[#ff5b1f]/40 focus:bg-white/[0.05]"
+                    "w-full rounded-xl border border-border bg-surface px-4 py-3.5 text-sm text-foreground",
+                    "placeholder:text-muted outline-none transition-colors",
+                    "focus:border-[#ff5b1f]/40 focus:bg-foreground/[0.04]"
                   )}
                 />
               </div>
@@ -121,7 +122,7 @@ export function ContactNamePanel({ open, onClose }: ContactNamePanelProps) {
                 )}
               >
                 <MessageCircle className="h-4 w-4" />
-                Entrar em contato
+                {t.contactPanel.submit}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </form>

@@ -11,14 +11,25 @@ import { FinalCTA } from "@/components/sections/FinalCTA";
 import { ContactNamePanel } from "@/components/ui/ContactNamePanel";
 import { ProjectModal } from "@/components/ui/ProjectModal";
 import { VirtualAgent } from "@/components/ui/VirtualAgent";
+import { SitePreferencesProvider } from "@/components/providers/SitePreferences";
 import type { Project } from "@/lib/data";
+import type { Locale, Theme } from "@/lib/i18n";
 
-export function HomeContent() {
+export function HomeContent({
+  initialLocale,
+  initialTheme,
+}: {
+  initialLocale: Locale;
+  initialTheme: Theme;
+}) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [contactPanelOpen, setContactPanelOpen] = useState(false);
 
   return (
-    <>
+    <SitePreferencesProvider
+      initialLocale={initialLocale}
+      initialTheme={initialTheme}
+    >
       <LoadingScreen />
       <Navbar onRequestContact={() => setContactPanelOpen(true)} />
       <main className="pb-fab-safe">
@@ -44,6 +55,6 @@ export function HomeContent() {
         onClose={() => setContactPanelOpen(false)}
       />
       <VirtualAgent hidden={!!selectedProject || contactPanelOpen} />
-    </>
+    </SitePreferencesProvider>
   );
 }

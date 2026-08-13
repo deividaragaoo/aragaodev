@@ -12,6 +12,7 @@ import {
 import { type Project } from "@/lib/data";
 import { HeroClients } from "@/components/sections/hero/HeroClients";
 import { HeroDashboard } from "@/components/sections/hero/HeroDashboard";
+import { usePreferences } from "@/components/providers/SitePreferences";
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -24,12 +25,7 @@ const stagger = {
   },
 };
 
-const benefits = [
-  { label: "UX/UI de Alto Nível", icon: Palette },
-  { label: "Performance Otimizada", icon: Zap },
-  { label: "Suporte Próximo", icon: Users },
-  { label: "Entregas Ágeis", icon: Rocket },
-];
+const benefitIcons = [Palette, Zap, Users, Rocket];
 
 interface HeroProps {
   onProjectSelect: (project: Project) => void;
@@ -37,6 +33,12 @@ interface HeroProps {
 }
 
 export function Hero({ onProjectSelect, onRequestContact }: HeroProps) {
+  const { t } = usePreferences();
+  const benefits = t.hero.benefits.map((label, index) => ({
+    label,
+    icon: benefitIcons[index],
+  }));
+
   return (
     <section className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 hero-grid opacity-[0.08]" aria-hidden="true" />
@@ -56,10 +58,10 @@ export function Hero({ onProjectSelect, onRequestContact }: HeroProps) {
             <motion.div
               variants={fadeUp}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-6 inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2"
+              className="mb-6 inline-flex rounded-full border border-border bg-surface px-4 py-2"
             >
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60 sm:text-[11px] sm:tracking-[0.22em]">
-                Software House • Atendimento em todo o Brasil
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted sm:text-[11px] sm:tracking-[0.22em]">
+                {t.hero.badge}
               </span>
             </motion.div>
 
@@ -68,19 +70,18 @@ export function Hero({ onProjectSelect, onRequestContact }: HeroProps) {
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="mb-5 text-[clamp(2.5rem,7vw,5.5rem)] font-bold leading-[0.95] tracking-[-0.04em]"
             >
-              <span className="text-white">Produtos digitais</span>
+              <span className="text-foreground">{t.hero.titleLead}</span>
               <br />
-              <span className="font-normal text-white/45">com padrão </span>
-              <span className="hero-premium-text">premium</span>
+              <span className="font-normal text-foreground/45">{t.hero.titleMid}</span>
+              <span className="hero-premium-text">{t.hero.titleAccent}</span>
             </motion.h1>
 
             <motion.p
               variants={fadeUp}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="mb-8 max-w-[600px] text-base font-light leading-relaxed text-white/70 sm:text-xl"
+              className="mb-8 max-w-[600px] text-base font-light leading-relaxed text-foreground/70 sm:text-xl"
             >
-              Desenvolvemos sites, sistemas e plataformas digitais para empresas
-              — com design refinado e performance de elite.
+              {t.hero.subtitle}
             </motion.p>
 
             <motion.div
@@ -95,16 +96,16 @@ export function Hero({ onProjectSelect, onRequestContact }: HeroProps) {
                 whileTap={{ scale: 0.98 }}
                 className="hero-btn-primary inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-white transition-all sm:text-base"
               >
-                Iniciar projeto
+                {t.hero.startProject}
                 <ArrowRight className="h-4 w-4" />
               </motion.button>
 
               <motion.div whileHover={{ y: -3, scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                 <Link
                   href="#projetos"
-                  className="hero-btn-secondary inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-white transition-all sm:w-auto sm:text-base"
+                  className="hero-btn-secondary inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-semibold text-foreground transition-all sm:w-auto sm:text-base"
                 >
-                  Ver trabalhos
+                  {t.hero.seeWork}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </motion.div>
@@ -119,7 +120,7 @@ export function Hero({ onProjectSelect, onRequestContact }: HeroProps) {
                 <motion.span
                   key={label}
                   whileHover={{ y: -2 }}
-                  className="group inline-flex items-center gap-1.5 text-[11px] text-white/55 transition-colors hover:text-white/80 sm:text-xs"
+                  className="group inline-flex items-center gap-1.5 text-[11px] text-foreground/55 transition-colors hover:text-foreground/80 sm:text-xs"
                 >
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ff5b1f]/10 transition-colors group-hover:bg-[#ff5b1f]/20">
                     <Icon className="h-3 w-3 text-[#ff5b1f]" strokeWidth={2} />

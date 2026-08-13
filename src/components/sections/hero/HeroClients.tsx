@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { projects, type Project } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "@/components/providers/SitePreferences";
 
 interface HeroClientsProps {
   onProjectSelect: (project: Project) => void;
@@ -36,6 +37,7 @@ function getCardLogo(project: Project) {
 }
 
 export function HeroClients({ onProjectSelect }: HeroClientsProps) {
+  const { t } = usePreferences();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -83,7 +85,7 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
       <div className="mb-5 flex items-center gap-2 sm:mb-6">
         <Star className="h-3.5 w-3.5 fill-[#ff5b1f] text-[#ff5b1f]" strokeWidth={1.5} />
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#ff5b1f] sm:text-[11px]">
-          Experiência que gera resultados
+          {t.clients.label}
         </p>
       </div>
 
@@ -92,11 +94,11 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
           type="button"
           onClick={() => scrollByCard(-1)}
           disabled={!canScrollLeft}
-          aria-label="Cliente anterior"
+          aria-label={t.clients.prev}
           className={cn(
-            "absolute -left-1 top-[calc(50%-12px)] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/[0.08] bg-[#0a0a0a]/95 text-white/70 backdrop-blur-sm transition-all sm:flex lg:-left-5",
+            "absolute -left-1 top-[calc(50%-12px)] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-elevated/95 text-foreground/70 backdrop-blur-sm transition-all sm:flex lg:-left-5",
             canScrollLeft
-              ? "hover:border-[#ff5b1f]/30 hover:text-white"
+              ? "hover:border-[#ff5b1f]/30 hover:text-foreground"
               : "pointer-events-none opacity-30"
           )}
         >
@@ -107,11 +109,11 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
           type="button"
           onClick={() => scrollByCard(1)}
           disabled={!canScrollRight}
-          aria-label="Próximo cliente"
+          aria-label={t.clients.next}
           className={cn(
-            "absolute -right-1 top-[calc(50%-12px)] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/[0.08] bg-[#0a0a0a]/95 text-white/70 backdrop-blur-sm transition-all sm:flex lg:-right-5",
+            "absolute -right-1 top-[calc(50%-12px)] z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-elevated/95 text-foreground/70 backdrop-blur-sm transition-all sm:flex lg:-right-5",
             canScrollRight
-              ? "hover:border-[#ff5b1f]/30 hover:text-white"
+              ? "hover:border-[#ff5b1f]/30 hover:text-foreground"
               : "pointer-events-none opacity-30"
           )}
         >
@@ -137,9 +139,9 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + index * 0.06, duration: 0.5 }}
                 onClick={() => onProjectSelect(project)}
-                className="group flex h-[148px] min-w-[132px] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border border-white/[0.08] transition-all duration-300 hover:-translate-y-1 hover:border-[#ff5b1f]/30 hover:shadow-[0_16px_40px_rgba(255,91,31,0.1)] sm:h-[156px] sm:min-w-[148px] lg:shrink"
+                className="group flex h-[148px] min-w-[132px] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border border-border transition-all duration-300 hover:-translate-y-1 hover:border-[#ff5b1f]/30 hover:shadow-[0_16px_40px_rgba(255,91,31,0.1)] sm:h-[156px] sm:min-w-[148px] lg:shrink"
                 style={{ backgroundColor: project.imageBg ?? "#0a0a0a" }}
-                aria-label={`Ver detalhes do projeto ${project.title}`}
+                aria-label={`${t.clients.viewProject} ${project.title}`}
               >
                 <div className="flex flex-1 items-center justify-center px-3 pt-3 sm:px-4 sm:pt-4">
                   <div

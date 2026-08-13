@@ -33,7 +33,7 @@ export function Button({
     primary:
       "bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/85",
     secondary:
-      "bg-transparent text-foreground border border-white/10 hover:border-white/20 hover:bg-white/[0.03] active:bg-white/[0.05]",
+      "bg-transparent text-foreground border border-border hover:border-foreground/20 hover:bg-foreground/[0.04] active:bg-foreground/[0.06]",
     ghost: "text-muted hover:text-foreground",
   };
 

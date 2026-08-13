@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
+import { htmlLang, parseLocale, parseTheme } from "@/lib/i18n";
+import { PREFERENCE_SCRIPT } from "@/lib/preferences-script";
 import { JsonLd } from "./json-ld";
 import "./globals.css";
 
@@ -55,23 +58,36 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050505",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f2ee" },
+    { media: "(prefers-color-scheme: dark)", color: "#050505" },
+  ],
+  colorScheme: "dark light",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jar = await cookies();
+  const locale = parseLocale(jar.get("aragao-lang")?.value);
+  const theme = parseTheme(jar.get("aragao-theme")?.value);
+
   return (
     <html
-      lang="pt-BR"
+      lang={htmlLang(locale)}
+      data-theme={theme}
+      data-locale={locale}
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: PREFERENCE_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <JsonLd />
         {children}

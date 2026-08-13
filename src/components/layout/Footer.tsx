@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { Mail } from "lucide-react";
-import { contact, footerLinks } from "@/lib/data";
+import { contact } from "@/lib/data";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { WhatsAppLink } from "@/components/ui/WhatsAppLink";
 import { InstagramLink } from "@/components/ui/InstagramLink";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "@/components/providers/SitePreferences";
 
 function FooterSection({
   title,
@@ -19,7 +20,7 @@ function FooterSection({
 }) {
   return (
     <div className={className}>
-      <p className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/35 sm:mb-4">
+      <p className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted sm:mb-4">
         <span className="h-1 w-1 rounded-full bg-[#ff5b1f]/80" />
         {title}
       </p>
@@ -29,11 +30,17 @@ function FooterSection({
 }
 
 const linkClassName =
-  "flex min-h-[44px] items-center text-[15px] text-white/60 transition-colors hover:text-white sm:min-h-0 sm:py-1.5 sm:text-sm";
+  "flex min-h-[44px] items-center text-[15px] text-muted transition-colors hover:text-foreground sm:min-h-0 sm:py-1.5 sm:text-sm";
 
 export function Footer({ onRequestContact }: { onRequestContact: () => void }) {
+  const { t } = usePreferences();
+  const companyLinks = [
+    { label: t.nav.projects, href: "#projetos" },
+    { label: t.nav.services, href: "#servicos" },
+  ];
+
   return (
-    <footer className="relative border-t border-white/[0.06] bg-[#050505] pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-[env(safe-area-inset-bottom,0px)]">
+    <footer className="relative border-t border-border bg-background pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] lg:pb-[env(safe-area-inset-bottom,0px)]">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#ff5b1f]/20 to-transparent"
         aria-hidden="true"
@@ -46,15 +53,15 @@ export function Footer({ onRequestContact }: { onRequestContact: () => void }) {
               <Link href="/" className="mb-4 inline-flex sm:mb-5">
                 <BrandLogo size="lg" />
               </Link>
-              <p className="max-w-xs text-sm font-light leading-relaxed text-white/50 sm:max-w-sm">
-                Software house premium. Design refinado, código de excelência.
+              <p className="max-w-xs text-sm font-light leading-relaxed text-muted sm:max-w-sm">
+                {t.footer.blurb}
               </p>
             </div>
 
             <div className="w-full md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-0 lg:gap-16">
-              <FooterSection title="Links" className="hidden md:block">
+              <FooterSection title={t.footer.links} className="hidden md:block">
                 <ul className="space-y-0.5">
-                  {footerLinks.company.map((link) => (
+                  {companyLinks.map((link) => (
                     <li key={link.label}>
                       <Link href={link.href} className={linkClassName}>
                         {link.label}
@@ -64,35 +71,35 @@ export function Footer({ onRequestContact }: { onRequestContact: () => void }) {
                 </ul>
               </FooterSection>
 
-              <FooterSection title="Serviços" className="hidden md:block">
+              <FooterSection title={t.footer.services} className="hidden md:block">
                 <ul className="space-y-0.5">
-                  {footerLinks.services.slice(0, 4).map((link) => (
-                    <li key={link.label}>
-                      <Link href={link.href} className={linkClassName}>
-                        {link.label}
+                  {t.footer.serviceItems.map((label) => (
+                    <li key={label}>
+                      <Link href="#servicos" className={linkClassName}>
+                        {label}
                       </Link>
                     </li>
                   ))}
                 </ul>
               </FooterSection>
 
-              <FooterSection title="Contato" className="w-full">
+              <FooterSection title={t.footer.contact} className="w-full">
                 <div className="space-y-3">
                   <a
                     href={`mailto:${contact.email}`}
                     className={cn(
-                      "group flex min-h-[56px] items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition-all duration-300",
-                      "hover:border-[#ff5b1f]/25 hover:bg-white/[0.04] active:scale-[0.99]"
+                      "group flex min-h-[56px] items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 transition-all duration-300",
+                      "hover:border-[#ff5b1f]/25 hover:bg-foreground/[0.04] active:scale-[0.99]"
                     )}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03] text-[#ff5b1f] transition-colors group-hover:border-[#ff5b1f]/25">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-[#ff5b1f] transition-colors group-hover:border-[#ff5b1f]/25">
                       <Mail className="h-4 w-4" strokeWidth={1.5} />
                     </span>
                     <span className="min-w-0 text-left">
-                      <span className="block truncate text-sm text-white/85 transition-colors group-hover:text-white">
+                      <span className="block truncate text-sm text-foreground/85 transition-colors group-hover:text-foreground">
                         {contact.email}
                       </span>
-                      <span className="block text-[11px] text-white/35">E-mail</span>
+                      <span className="block text-[11px] text-subtle">{t.footer.email}</span>
                     </span>
                   </a>
 
@@ -100,14 +107,14 @@ export function Footer({ onRequestContact }: { onRequestContact: () => void }) {
                     <WhatsAppLink
                       onRequestContact={onRequestContact}
                       className={cn(
-                        "min-h-[56px] w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3",
-                        "hover:border-[#25D366]/30 hover:bg-white/[0.04] active:scale-[0.99]"
+                        "min-h-[56px] w-full rounded-2xl border border-border bg-surface px-4 py-3",
+                        "hover:border-[#25D366]/30 hover:bg-foreground/[0.04] active:scale-[0.99]"
                       )}
                     />
                     <InstagramLink
                       className={cn(
-                        "min-h-[56px] w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3",
-                        "hover:border-[#E4405F]/30 hover:bg-white/[0.04] active:scale-[0.99]"
+                        "min-h-[56px] w-full rounded-2xl border border-border bg-surface px-4 py-3",
+                        "hover:border-[#E4405F]/30 hover:bg-foreground/[0.04] active:scale-[0.99]"
                       )}
                     />
                   </div>
@@ -117,13 +124,13 @@ export function Footer({ onRequestContact }: { onRequestContact: () => void }) {
           </div>
         </div>
 
-        <div className="border-t border-white/[0.06] py-5 sm:py-6">
+        <div className="border-t border-border py-5 sm:py-6">
           <div className="flex flex-col items-center gap-1.5 text-center sm:flex-row sm:justify-between sm:text-left">
-            <p className="text-xs font-light text-white/35">
+            <p className="text-xs font-light text-subtle">
               © {new Date().getFullYear()} Aragão Dev
             </p>
-            <p className="text-xs font-light text-white/35">
-              Atendimento em todo o Brasil
+            <p className="text-xs font-light text-subtle">
+              {t.footer.nationwide}
             </p>
           </div>
         </div>

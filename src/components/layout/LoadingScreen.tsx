@@ -29,7 +29,7 @@ export function LoadingScreen() {
           >
             <BrandLogo size="lg" />
             <motion.div
-              className="w-32 h-px bg-white/10 overflow-hidden"
+              className="w-32 h-px bg-foreground/10 overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}

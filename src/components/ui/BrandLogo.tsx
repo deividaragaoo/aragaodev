@@ -23,7 +23,7 @@ export function BrandLogo({ className, size = "md" }: BrandLogoProps) {
         alt="Aragão Dev."
         width={508}
         height={120}
-        className={cn("w-auto object-contain", sizeStyles[size])}
+        className={cn("w-auto object-contain brand-logo", sizeStyles[size])}
         priority={size === "sm"}
       />
     </div>

@@ -5,20 +5,24 @@ import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "@/lib/data";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ProjectImage } from "@/components/ui/ProjectImage";
+import { usePreferences } from "@/components/providers/SitePreferences";
+import { getProjectCopy } from "@/lib/i18n";
 
 interface ProjectsProps {
   onProjectSelect: (project: Project) => void;
 }
 
 export function Projects({ onProjectSelect }: ProjectsProps) {
+  const { locale, t } = usePreferences();
+
   return (
     <section id="projetos" className="section-padding relative scroll-mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <SectionHeader
           index="01"
-          label="Trabalhos"
-          title="Alguns dos meus projetos selecionados"
-          description="Experiências digitais reais entregues para marcas que exigem excelência."
+          label={t.projects.label}
+          title={t.projects.title}
+          description={t.projects.description}
         />
 
         <div className="space-y-4">
@@ -32,7 +36,7 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
               className="group cursor-pointer"
               onClick={() => onProjectSelect(project)}
             >
-              <div className="surface rounded-2xl overflow-hidden transition-all duration-500 hover:border-white/10">
+              <div className="surface rounded-2xl overflow-hidden transition-all duration-500 hover:border-foreground/15">
                 <div className="grid lg:grid-cols-2 gap-0">
                   <div
                     className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[320px] overflow-hidden"
@@ -49,26 +53,28 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
                     <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                       <div className="min-w-0">
                         <p className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-muted mb-1.5 sm:mb-2">
-                          {project.category}
+                          {getProjectCopy(project.id, locale)?.category ??
+                            project.category}
                         </p>
                         <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-[-0.02em] leading-tight">
                           {project.title}
                         </h3>
                       </div>
-                      <div className="flex-shrink-0 w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-muted group-hover:text-foreground group-hover:border-white/20 group-active:scale-95 transition-all duration-300">
+                      <div className="flex-shrink-0 w-11 h-11 rounded-full border border-border flex items-center justify-center text-muted group-hover:text-foreground group-hover:border-foreground/20 group-active:scale-95 transition-all duration-300">
                         <ArrowUpRight className="w-4 h-4" />
                       </div>
                     </div>
 
                     <p className="text-muted text-sm leading-relaxed mb-6 font-light">
-                      {project.description}
+                      {getProjectCopy(project.id, locale)?.description ??
+                        project.description}
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
                       {project.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-3 py-1 rounded-full text-[11px] font-mono text-muted border border-white/[0.06]"
+                          className="px-3 py-1 rounded-full text-[11px] font-mono text-muted border border-border"
                         >
                           {tag}
                         </span>
@@ -76,7 +82,7 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
                     </div>
 
                     <p className="text-[11px] font-mono text-subtle uppercase tracking-wider">
-                      Ver galeria e detalhes →
+                      {t.projects.viewDetails}
                     </p>
                   </div>
                 </div>

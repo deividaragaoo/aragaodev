@@ -7,6 +7,8 @@ import { Button } from "./Button";
 import { ProjectCarousel } from "./ProjectCarousel";
 import { MobileSitePreview } from "./MobileSitePreview";
 import type { Project } from "@/lib/data";
+import { usePreferences } from "@/components/providers/SitePreferences";
+import { getProjectCopy, translateMetric } from "@/lib/i18n";
 
 interface ProjectModalProps {
   project: Project | null;
@@ -16,6 +18,8 @@ interface ProjectModalProps {
 
 export function ProjectModal({ project, onClose, onRequestContact }: ProjectModalProps) {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const { locale, t } = usePreferences();
+  const copy = project ? getProjectCopy(project.id, locale) : null;
 
   useEffect(() => {
     setShowMobilePreview(false);
@@ -47,39 +51,44 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 24 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed inset-x-3 top-[max(1rem,env(safe-area-inset-top,1rem))] bottom-[max(1rem,env(safe-area-inset-bottom,1rem))] sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-2xl z-[130] max-h-none sm:max-h-[90vh] overflow-y-auto rounded-2xl border border-white/[0.08] bg-background shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+              className="fixed inset-x-3 top-[max(1rem,env(safe-area-inset-top,1rem))] bottom-[max(1rem,env(safe-area-inset-bottom,1rem))] sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-2xl z-[130] max-h-none sm:max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-background shadow-[0_24px_80px_rgba(0,0,0,0.25)]"
             >
-              <div className="relative p-4 sm:p-5 border-b border-white/[0.06]">
+              <div className="relative p-4 sm:p-5 border-b border-border">
                 <button
                   onClick={onClose}
-                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-background/80 border border-white/10 hover:border-white/20 active:scale-95 transition-all"
-                  aria-label="Fechar modal"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-background/80 border border-border hover:border-foreground/20 active:scale-95 transition-all"
+                  aria-label={t.modal.close}
                 >
                   <X className="w-4 h-4" />
                 </button>
 
                 <div className="mb-4 pr-12">
                   <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted mb-1">
-                    {project.category}
+                    {copy?.category ?? project.category}
                   </p>
                   <h3 className="text-lg sm:text-xl font-semibold tracking-[-0.02em] leading-tight">
                     {project.title}
                   </h3>
                 </div>
 
-                <ProjectCarousel items={project.gallery} />
+                <ProjectCarousel
+                  items={project.gallery.map((item) => ({
+                    ...item,
+                    caption: copy?.caption ?? item.caption,
+                  }))}
+                />
               </div>
 
               <div className="p-5 sm:p-8">
                 <p className="text-muted text-sm leading-relaxed mb-5 sm:mb-6 font-light">
-                  {project.description}
+                  {copy?.description ?? project.description}
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
                   {project.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-3 py-1 rounded-full text-[11px] font-mono text-muted border border-white/[0.06]"
+                      className="px-3 py-1 rounded-full text-[11px] font-mono text-muted border border-border"
                     >
                       {tag}
                     </span>
@@ -90,17 +99,17 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
                   {Object.entries(project.metrics).map(([label, value]) => (
                     <div
                       key={label}
-                      className="flex items-center justify-between sm:block text-left sm:text-center py-3 sm:py-4 px-4 sm:px-0 rounded-xl border border-white/[0.06]"
+                      className="flex items-center justify-between sm:block text-left sm:text-center py-3 sm:py-4 px-4 sm:px-0 rounded-xl border border-border"
                     >
                       <div className="text-base sm:text-lg font-semibold tracking-[-0.02em]">{value}</div>
                       <div className="text-[10px] sm:text-[10px] font-mono text-muted uppercase tracking-wider sm:mt-1">
-                        {label}
+                        {translateMetric(locale, label)}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-5 sm:pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row gap-3">
+                <div className="pt-5 sm:pt-6 border-t border-border flex flex-col sm:flex-row gap-3">
                   <Button
                     variant="primary"
                     showArrow={false}
@@ -109,7 +118,7 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
                     onClick={() => setShowMobilePreview(true)}
                   >
                     <Smartphone className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-                    <span className="whitespace-nowrap">Ver site no celular</span>
+                    <span className="whitespace-nowrap">{t.modal.viewMobile}</span>
                   </Button>
                   <Button
                     variant="secondary"
@@ -118,7 +127,7 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
                     className="sm:flex-1"
                     onClick={onRequestContact}
                   >
-                    Entrar em contato
+                    {t.modal.contact}
                   </Button>
                 </div>
               </div>

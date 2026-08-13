@@ -11,7 +11,7 @@ export function GlassCard({ children, className }: GlassCardProps) {
   return (
     <div
       className={cn(
-        "surface rounded-2xl p-6 lg:p-8 transition-colors duration-300 hover:border-white/10",
+        "surface rounded-2xl p-6 lg:p-8 transition-colors duration-300 hover:border-foreground/15",
         className
       )}
     >

@@ -13,25 +13,9 @@ import {
   Zap,
 } from "lucide-react";
 
-const navItems = ["Projetos", "Serviços", "Sobre", "Contato"];
+import { usePreferences } from "@/components/providers/SitePreferences";
 
-const dashboardCards = [
-  {
-    label: "Performance",
-    description: "Core Web Vitals otimizados",
-    icon: Zap,
-  },
-  {
-    label: "Segurança",
-    description: "Proteção em cada camada",
-    icon: Shield,
-  },
-  {
-    label: "Escalabilidade",
-    description: "Arquitetura preparada",
-    icon: TrendingUp,
-  },
-];
+const dashboardIcons = [Zap, Shield, TrendingUp];
 
 const floatingIcons = [
   {
@@ -152,6 +136,12 @@ function OrbitalRings() {
 }
 
 export function HeroDashboard() {
+  const { t } = usePreferences();
+  const navItems = t.dashboard.nav;
+  const dashboardCards = t.dashboard.cards.map((card, index) => ({
+    ...card,
+    icon: dashboardIcons[index],
+  }));
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -245,7 +235,7 @@ export function HeroDashboard() {
                     <span
                       key={item}
                       className={`text-[8px] font-medium ${
-                        item === "Projetos" ? "text-white/70" : "text-white/25"
+                        item === navItems[0] ? "text-white/70" : "text-white/25"
                       }`}
                     >
                       {item}
@@ -253,7 +243,7 @@ export function HeroDashboard() {
                   ))}
                 </div>
                 <span className="rounded-full bg-[#ff5b1f] px-2 py-0.5 text-[7px] font-semibold text-white sm:hidden">
-                  Contato
+                  {t.dashboard.contact}
                 </span>
               </div>
 
@@ -261,14 +251,14 @@ export function HeroDashboard() {
                 <div className="grid gap-3 sm:grid-cols-[1.1fr_0.9fr] sm:gap-4">
                   <div className="space-y-2.5 sm:space-y-3">
                     <h3 className="text-base font-bold leading-[1.05] tracking-[-0.03em] sm:text-xl">
-                      <span className="text-white">Desempenho </span>
-                      <span className="text-[#ff5b1f]">em cada detalhe</span>
+                      <span className="text-white">{t.dashboard.title}</span>
+                      <span className="text-[#ff5b1f]">{t.dashboard.titleAccent}</span>
                     </h3>
                     <p className="max-w-[220px] text-[9px] leading-relaxed text-white/45 sm:text-[10px]">
-                      Design refinado, engenharia sólida e resultados mensuráveis em cada entrega.
+                      {t.dashboard.body}
                     </p>
                     <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#ff7a18] to-[#ff3d00] px-3 py-1.5 text-[8px] font-semibold text-white shadow-[0_4px_20px_rgba(255,91,31,0.35)] sm:text-[9px]">
-                      Iniciar projeto
+                      {t.dashboard.cta}
                       <ArrowRight className="h-2.5 w-2.5" />
                     </span>
                   </div>
@@ -294,7 +284,7 @@ export function HeroDashboard() {
 
                 <div className="flex items-center justify-between border-t border-white/[0.05] pt-2.5">
                   <span className="text-[8px] font-mono uppercase tracking-[0.12em] text-white/30">
-                    Tecnologias modernas
+                    {t.dashboard.tech}
                   </span>
                   <div className="flex gap-1.5">
                     {["N", "R", "T"].map((tech) => (

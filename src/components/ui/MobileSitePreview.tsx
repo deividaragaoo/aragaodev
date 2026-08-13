@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Loader2, Smartphone } from "lucide-react";
+import { usePreferences } from "@/components/providers/SitePreferences";
 
 /** iPhone 14 Pro Max viewport (CSS logical pixels) */
 const DEVICE_WIDTH = 430;
@@ -23,6 +24,7 @@ interface PreviewFrameProps {
 }
 
 function PreviewFrame({ url, title, className }: PreviewFrameProps) {
+  const { t } = usePreferences();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -62,14 +64,14 @@ function PreviewFrame({ url, title, className }: PreviewFrameProps) {
       {loading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background">
           <Loader2 className="w-6 h-6 animate-spin text-muted" />
-          <p className="text-xs text-muted font-light">Carregando site...</p>
+          <p className="text-xs text-muted font-light">{t.preview.loading}</p>
         </div>
       )}
 
       {!loading && failed && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background px-6 text-center">
           <p className="text-sm text-muted font-light">
-            Não foi possível exibir o preview aqui.
+            {t.preview.failed}
           </p>
           <a
             href={url}
@@ -77,7 +79,7 @@ function PreviewFrame({ url, title, className }: PreviewFrameProps) {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-foreground hover:text-foreground/80 transition-colors"
           >
-            Abrir site em nova aba
+            {t.preview.openTab}
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
@@ -96,6 +98,7 @@ function PreviewFrame({ url, title, className }: PreviewFrameProps) {
 }
 
 export function MobileSitePreview({ url, title, open, onClose }: MobileSitePreviewProps) {
+  const { t } = usePreferences();
   const [session, setSession] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -151,7 +154,7 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
               className="fixed inset-0 z-[141] flex flex-col bg-background"
               style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
             >
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/[0.06] shrink-0">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border shrink-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <Smartphone className="w-4 h-4 text-muted shrink-0" />
                   <div className="min-w-0">
@@ -162,8 +165,8 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] active:scale-95 transition-all"
-                  aria-label="Fechar preview"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface active:scale-95 transition-all"
+                  aria-label={t.preview.close}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -177,7 +180,7 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
               />
 
               <div
-                className="flex items-center justify-between gap-3 px-4 py-3 border-t border-white/[0.06] shrink-0"
+                className="flex items-center justify-between gap-3 px-4 py-3 border-t border-border shrink-0"
                 style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}
               >
                 <button
@@ -185,7 +188,7 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                   onClick={onClose}
                   className="flex-1 min-h-[44px] rounded-full text-sm font-medium bg-foreground text-background active:scale-[0.98] transition-transform"
                 >
-                  Voltar
+                  {t.preview.back}
                 </button>
                 <a
                   href={url}
@@ -193,7 +196,7 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[44px] items-center gap-1.5 px-4 text-xs text-muted hover:text-foreground transition-colors"
                 >
-                  Nova aba
+                  {t.preview.newTab}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -222,8 +225,8 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-background/90 hover:border-white/20 transition-colors shrink-0"
-                    aria-label="Fechar preview"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/90 hover:border-foreground/20 transition-colors shrink-0"
+                    aria-label={t.preview.close}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -270,7 +273,7 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                       onClick={onClose}
                       className="px-5 py-2.5 rounded-full text-sm font-medium bg-foreground text-background hover:bg-foreground/90 transition-colors min-h-[44px]"
                     >
-                      Voltar ao portfólio
+                      {t.preview.backPortfolio}
                     </button>
                     <a
                       href={url}
@@ -278,7 +281,7 @@ export function MobileSitePreview({ url, title, open, onClose }: MobileSitePrevi
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors min-h-[44px] px-2"
                     >
-                      Abrir em nova aba
+                      {t.preview.openNewTab}
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
