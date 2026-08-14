@@ -21,6 +21,7 @@ const copy = {
     title: ["Projetos que", "falam por si."],
     subtitle:
       "Experiências digitais desenvolvidas para marcas e negócios reais.",
+    countLabel: "projetos",
     viewProject: "Ver projeto",
     viewAll: "Ver todos os projetos",
     shorts: {
@@ -45,6 +46,7 @@ const copy = {
     label: "Work",
     title: ["Projects that", "speak for themselves."],
     subtitle: "Digital experiences built for real brands and businesses.",
+    countLabel: "projects",
     viewProject: "View project",
     viewAll: "View all projects",
     shorts: {
@@ -104,20 +106,29 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-12 max-w-3xl sm:mb-16 lg:mb-20"
+          className="mb-12 sm:mb-16 lg:mb-20"
         >
-          <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.22em]">
-            <span className="text-[#ff5b1f]">{t.index}</span>
-            <span className="text-muted"> — {t.label}</span>
-          </p>
-          <h2 className="text-[clamp(2.35rem,6.4vw,4.4rem)] font-semibold leading-[0.94] tracking-[-0.045em]">
-            {t.title[0]}
-            <br />
-            {t.title[1]}
+          <div className="flex items-baseline justify-between gap-4">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#ff5b1f]">
+              {t.index}
+            </p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
+              {String(projects.length).padStart(2, "0")} {t.countLabel}
+            </p>
+          </div>
+
+          <h2 className="mt-4 text-[clamp(3.4rem,14vw,9.5rem)] font-semibold leading-[0.82] tracking-[-0.06em]">
+            {t.label}
           </h2>
-          <p className="mt-5 max-w-md text-base font-light leading-relaxed text-muted sm:text-lg">
-            {t.subtitle}
-          </p>
+
+          <div className="mt-6 flex flex-col gap-4 sm:mt-8 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
+            <p className="max-w-xl text-[clamp(1.35rem,3vw,2.15rem)] font-semibold leading-[1.05] tracking-[-0.035em]">
+              {t.title[0]} {t.title[1]}
+            </p>
+            <p className="max-w-sm text-base font-light leading-relaxed text-muted sm:text-right sm:text-lg">
+              {t.subtitle}
+            </p>
+          </div>
         </motion.header>
 
         <FeaturedCard
