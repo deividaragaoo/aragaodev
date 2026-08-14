@@ -1,12 +1,20 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import { Instrument_Serif } from "next/font/google";
 import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "@/lib/data";
 import { usePreferences } from "@/components/providers/SitePreferences";
 import { getProjectCopy, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+
+const displaySerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+});
 
 interface ProjectsProps {
   onProjectSelect: (project: Project) => void;
@@ -117,9 +125,7 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
             </p>
           </div>
 
-          <h2 className="mt-4 text-[clamp(3.4rem,14vw,9.5rem)] font-semibold leading-[0.82] tracking-[-0.06em]">
-            {t.label}
-          </h2>
+          <SectionName>{t.label}</SectionName>
 
           <div className="mt-6 flex flex-col gap-4 sm:mt-8 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
             <p className="max-w-xl text-[clamp(1.35rem,3vw,2.15rem)] font-semibold leading-[1.05] tracking-[-0.035em]">
@@ -171,6 +177,48 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
         </motion.div>
       </div>
     </section>
+  );
+}
+
+function SectionName({ children }: { children: string }) {
+  const { theme } = usePreferences();
+  const reduceMotion = useReducedMotion();
+  const isDark = theme === "dark";
+
+  return (
+    <h2
+      className={cn(
+        displaySerif.className,
+        "group/title relative mt-3 inline-block overflow-hidden py-1 pr-[0.12em]",
+        "text-[clamp(2.35rem,6.4vw,4.6rem)] leading-[0.94] tracking-[-0.03em] text-foreground",
+        isDark ? "italic" : "not-italic"
+      )}
+    >
+      <span className="relative z-[1]">{children}</span>
+      <span
+        aria-hidden
+        className="absolute bottom-[0.22em] left-0 z-[1] h-[2px] w-10 rounded-full bg-[#ff5b1f] sm:w-12"
+      />
+      {!reduceMotion && (
+        <motion.span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute -inset-y-3 left-0 z-[2] w-[42%] skew-x-[-20deg]",
+            "bg-gradient-to-r from-transparent via-[#ff5b1f]/80 to-transparent",
+            "opacity-80 transition-opacity duration-300 group-hover/title:opacity-100",
+            isDark ? "mix-blend-screen" : "mix-blend-multiply"
+          )}
+          initial={{ x: "-90%" }}
+          animate={{ x: ["-90%", "280%"] }}
+          transition={{
+            duration: 2.4,
+            repeat: Infinity,
+            repeatDelay: 2.8,
+            ease: [0.45, 0, 0.2, 1],
+          }}
+        />
+      )}
+    </h2>
   );
 }
 
