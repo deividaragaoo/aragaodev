@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import { cookies } from "next/headers";
 import { htmlLang, parseLocale, parseTheme } from "@/lib/i18n";
 import { PREFERENCE_SCRIPT } from "@/lib/preferences-script";
@@ -14,6 +14,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -83,7 +89,7 @@ export default async function RootLayout({
       data-theme={theme}
       data-locale={locale}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
+      className={`${geistSans.variable} ${geistMono.variable} ${manrope.variable} h-full scroll-smooth`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: PREFERENCE_SCRIPT }} />

@@ -110,6 +110,7 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
                 </div>
 
                 <div className="pt-5 sm:pt-6 border-t border-border flex flex-col sm:flex-row gap-3">
+                  {project.url.startsWith("http") && (
                   <Button
                     variant="primary"
                     showArrow={false}
@@ -120,6 +121,7 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
                     <Smartphone className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                     <span className="whitespace-nowrap">{t.modal.viewMobile}</span>
                   </Button>
+                  )}
                   <Button
                     variant="secondary"
                     showArrow={false}
@@ -136,7 +138,7 @@ export function ProjectModal({ project, onClose, onRequestContact }: ProjectModa
         )}
       </AnimatePresence>
 
-      {project && (
+      {project && project.url.startsWith("http") && (
         <MobileSitePreview
           url={project.url}
           title={project.title}

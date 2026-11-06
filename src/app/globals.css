@@ -198,6 +198,10 @@ html[data-theme="light"] .glass {
   }
 }
 
+.portfolio-type {
+  font-family: var(--font-manrope), var(--font-geist-sans), system-ui, sans-serif;
+}
+
 .pb-fab-safe {
   padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }

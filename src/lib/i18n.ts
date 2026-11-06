@@ -59,18 +59,18 @@ const metricLabels = {
 } as const;
 
 const projectCopy = {
-  "gl-emporio": {
+  "sistema-adegas": {
     pt: {
-      category: "E-commerce",
+      category: "Sistema de Gestão",
       description:
-        "Distribuidora premium de bebidas com catálogo completo, ofertas da semana, integração WhatsApp e experiência de compra focada em conversão.",
-      caption: "Painel administrativo",
+        "Plataforma inteligente para gestão de adegas, com controle de estoque, vendas, pedidos, produtos e acompanhamento financeiro em um único ambiente.",
+      caption: "Painel de gestão",
     },
     en: {
-      category: "E-commerce",
+      category: "Management System",
       description:
-        "Premium beverage distributor with a full catalog, weekly deals, WhatsApp integration, and a conversion-focused shopping experience.",
-      caption: "Admin dashboard",
+        "Intelligent platform for cellar management, with inventory, sales, orders, products, and financial tracking in a single environment.",
+      caption: "Management dashboard",
     },
   },
   "partiu-pizza": {
@@ -143,18 +143,18 @@ const projectCopy = {
       caption: "Admin dashboard",
     },
   },
-  "emporio-motors": {
+  "sistema-concessionarias": {
     pt: {
-      category: "Concessionária",
+      category: "Sistema Automotivo",
       description:
-        "Site institucional premium para concessionária de veículos de luxo, com catálogo de destaques, fluxo de venda de veículos, integração Instagram e atendimento via consultores especializados.",
-      caption: "Concessionária premium",
+        "Solução digital para concessionárias, com gerenciamento de veículos, controle de estoque, gestão de interessados e acompanhamento de negociações comerciais.",
+      caption: "Painel comercial",
     },
     en: {
-      category: "Dealership",
+      category: "Automotive System",
       description:
-        "Premium institutional site for a luxury car dealership, with featured inventory, a vehicle sales flow, Instagram integration, and specialist consultants.",
-      caption: "Premium dealership",
+        "Digital solution for dealerships, with vehicle management, inventory control, lead handling, and commercial negotiation tracking.",
+      caption: "Commercial dashboard",
     },
   },
 } as const;

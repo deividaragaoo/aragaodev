@@ -29,11 +29,7 @@ function isLightBackground(color?: string) {
 }
 
 function getCardLogo(project: Project) {
-  if (project.id === "emporio-motors") {
-    return "/projects/emporio-motors-card-logo.svg";
-  }
-
-  return project.image;
+  return project.heroImage ?? project.image;
 }
 
 export function HeroClients({ onProjectSelect }: HeroClientsProps) {
@@ -80,7 +76,7 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="relative mx-auto mt-16 w-full max-w-6xl sm:mt-20 lg:mt-24"
+      className="portfolio-type relative mx-auto mt-16 w-full max-w-6xl sm:mt-20 lg:mt-24"
     >
       <div className="mb-5 flex items-center gap-2 sm:mb-6">
         <Star className="h-3.5 w-3.5 fill-[#ff5b1f] text-[#ff5b1f]" strokeWidth={1.5} />
@@ -127,8 +123,8 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
           {projects.map((project, index) => {
             const lightBg = isLightBackground(project.imageBg);
             const imageSrc = getCardLogo(project);
-            const isWideLogo =
-              project.id === "emporio-motors" || project.heroImageAspect === "wide";
+            const isCover = project.imageFit === "cover";
+            const isWideLogo = project.heroImageAspect === "wide";
 
             return (
               <motion.button
@@ -143,13 +139,15 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
                 style={{ backgroundColor: project.imageBg ?? "#0a0a0a" }}
                 aria-label={`${t.clients.viewProject} ${project.title}`}
               >
-                <div className="flex flex-1 items-center justify-center px-3 pt-3 sm:px-4 sm:pt-4">
+                <div className={cn("flex flex-1 items-center justify-center", isCover ? "relative min-h-0" : "px-3 pt-3 sm:px-4 sm:pt-4")}>
                   <div
                     className={cn(
                       "relative flex items-center justify-center",
-                      isWideLogo
-                        ? "h-11 w-[88px] sm:h-12 sm:w-[96px]"
-                        : "h-14 w-14 sm:h-[60px] sm:w-[60px]"
+                      isCover
+                        ? "absolute inset-0"
+                        : isWideLogo
+                          ? "h-11 w-[88px] sm:h-12 sm:w-[96px]"
+                          : "h-14 w-14 sm:h-[60px] sm:w-[60px]"
                     )}
                   >
                     <Image
@@ -159,14 +157,17 @@ export function HeroClients({ onProjectSelect }: HeroClientsProps) {
                       quality={100}
                       unoptimized
                       sizes="148px"
-                      className="object-contain object-center transition-transform duration-500 group-hover:scale-[1.04]"
+                      className={cn(
+                        "transition-transform duration-500 group-hover:scale-[1.04]",
+                        isCover ? "object-cover object-left-top" : "object-contain object-center"
+                      )}
                     />
                   </div>
                 </div>
 
                 <p
                   className={cn(
-                    "px-3 pb-3 text-left text-[11px] font-medium tracking-[-0.01em] sm:px-3.5 sm:pb-3.5 sm:text-xs",
+                    "line-clamp-2 px-3 pb-3 text-left text-[11px] font-semibold leading-snug tracking-[-0.02em] sm:px-3.5 sm:pb-3.5 sm:text-xs",
                     lightBg ? "text-zinc-800" : "text-white/75"
                   )}
                 >

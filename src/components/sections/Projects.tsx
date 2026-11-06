@@ -2,25 +2,17 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { Instrument_Serif } from "next/font/google";
 import { ArrowUpRight } from "lucide-react";
 import { projects, type Project } from "@/lib/data";
 import { usePreferences } from "@/components/providers/SitePreferences";
 import { getProjectCopy, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const displaySerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: "normal",
-  display: "swap",
-});
-
 interface ProjectsProps {
   onProjectSelect: (project: Project) => void;
 }
 
-const FEATURED_ID = "gl-emporio";
+const FEATURED_ID = "sistema-adegas";
 
 const copy = {
   pt: {
@@ -33,8 +25,8 @@ const copy = {
     viewProject: "Ver projeto",
     viewAll: "Ver todos os projetos",
     shorts: {
-      "gl-emporio":
-        "Distribuidora premium de bebidas com experiência de compra completa, ofertas exclusivas e integração WhatsApp.",
+      "sistema-adegas":
+        "Plataforma inteligente para gestão de adegas, com estoque, vendas, pedidos e financeiro em um único ambiente.",
       "partiu-pizza":
         "Delivery de pizzas com cardápio digital e pedidos no mobile.",
       "pizzaria-carioca":
@@ -45,8 +37,8 @@ const copy = {
         "Presença digital para compositor e produtor musical.",
       "mana-pizzaria":
         "Painel interno para gestão de pedidos e operação.",
-      "emporio-motors":
-        "Site institucional para concessionária de veículos de luxo.",
+      "sistema-concessionarias":
+        "Gestão de veículos, estoque, interessados e negociações comerciais.",
     } as Record<string, string>,
   },
   en: {
@@ -58,8 +50,8 @@ const copy = {
     viewProject: "View project",
     viewAll: "View all projects",
     shorts: {
-      "gl-emporio":
-        "Premium beverage distributor with a complete shopping experience, exclusive deals, and WhatsApp integration.",
+      "sistema-adegas":
+        "Intelligent cellar platform for inventory, sales, orders, and financial tracking.",
       "partiu-pizza":
         "Pizza delivery with a digital menu and mobile ordering.",
       "pizzaria-carioca":
@@ -70,8 +62,8 @@ const copy = {
         "Digital presence for a composer and music producer.",
       "mana-pizzaria":
         "Internal dashboard for orders and operations.",
-      "emporio-motors":
-        "Institutional site for a luxury car dealership.",
+      "sistema-concessionarias":
+        "Vehicle inventory, leads, and commercial negotiation tracking.",
     } as Record<string, string>,
   },
 } as const;
@@ -107,7 +99,7 @@ export function Projects({ onProjectSelect }: ProjectsProps) {
   const rest = projects.filter((project) => project.id !== featured.id);
 
   return (
-    <section id="projetos" className="section-padding relative scroll-mt-20">
+    <section id="projetos" className="portfolio-type section-padding relative scroll-mt-20">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <motion.header
           initial={{ opacity: 0, y: 16 }}
@@ -181,10 +173,7 @@ function SectionName({ children }: { children: string }) {
   return (
     <div className="mt-5 flex flex-col items-center">
       <motion.h2
-        className={cn(
-          displaySerif.className,
-          "text-center text-[clamp(2rem,4.6vw,3.15rem)] not-italic leading-none tracking-[-0.02em] text-foreground"
-        )}
+        className="text-center text-[clamp(2rem,4.6vw,3.15rem)] font-semibold leading-none tracking-[-0.04em] text-foreground"
         style={
           reduceMotion
             ? undefined
@@ -270,25 +259,25 @@ function FeaturedCard({
             sizes="(max-width: 1024px) 100vw, 62vw"
             className={cn(
               visual.cover
-                ? "object-cover object-center"
+                ? "object-cover object-top"
                 : "object-contain p-10",
-              "transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+              "transition duration-500 ease-out group-hover:scale-[1.035] group-hover:opacity-95"
             )}
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/20" />
         </div>
 
         <div className="relative flex flex-col justify-center px-6 py-8 sm:px-10 sm:py-12 lg:px-12">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-[#ff5b1f] sm:text-[11px]">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#ff5b1f]">
             {category}
           </p>
-          <h3 className="text-[clamp(1.85rem,3.4vw,3rem)] font-semibold uppercase leading-[0.95] tracking-[-0.04em]">
+          <h3 className="text-[clamp(1.75rem,3vw,2.6rem)] font-semibold leading-[1.05] tracking-[-0.04em]">
             {project.title}
           </h3>
-          <p className="mt-5 max-w-sm text-sm font-light leading-relaxed text-muted sm:text-[15px]">
+          <p className="mt-5 max-w-sm text-sm font-normal leading-relaxed text-foreground/70 sm:text-[15px]">
             {getShort(project, locale)}
           </p>
-          <span className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">
+          <span className="mt-8 inline-flex items-center gap-2 text-[13px] font-semibold tracking-[-0.01em] text-[#ff5b1f]">
             {cta}
             <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </span>
@@ -329,7 +318,7 @@ function ProjectCard({
       <button
         type="button"
         onClick={() => onSelect(project)}
-        className="group flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-border bg-elevated text-left transition-transform duration-500 ease-out hover:-translate-y-1"
+        className="group flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-border bg-elevated text-left transition duration-500 ease-out hover:-translate-y-1 hover:border-[#ff5b1f]/25"
       >
         <div
           className="relative aspect-[16/10] overflow-hidden"
@@ -344,9 +333,9 @@ function ProjectCard({
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className={cn(
               visual.cover
-                ? "object-cover object-center"
+                ? "object-cover object-top"
                 : "object-contain p-8",
-              "transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+              "transition duration-500 ease-out group-hover:scale-[1.035] group-hover:opacity-95"
             )}
           />
           <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/10" />
@@ -355,10 +344,10 @@ function ProjectCard({
         <div className="flex flex-1 flex-col px-5 py-5 sm:px-6 sm:py-6">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[#ff5b1f]">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ff5b1f]">
                 {category}
               </p>
-              <h3 className="text-lg font-semibold tracking-[-0.02em] sm:text-xl">
+              <h3 className="text-lg font-semibold leading-snug tracking-[-0.03em] sm:text-xl">
                 {project.title}
               </h3>
             </div>
@@ -366,11 +355,11 @@ function ProjectCard({
               <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </span>
           </div>
-          <p className="line-clamp-2 text-sm font-light leading-relaxed text-muted">
+          <p className="line-clamp-2 text-sm font-normal leading-relaxed text-foreground/65">
             {getShort(project, locale)}
           </p>
-          <span className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-subtle">
-            {cta} →
+          <span className="mt-auto pt-4 text-[12px] font-semibold tracking-[-0.01em] text-[#ff5b1f]/80 transition-colors duration-300 group-hover:text-[#ff5b1f]">
+            {cta}
           </span>
         </div>
       </button>
